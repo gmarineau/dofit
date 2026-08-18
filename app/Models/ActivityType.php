@@ -36,11 +36,17 @@ class ActivityType extends Model
      */
     protected function activitiesFormatted(): Attribute
     {
-        return Attribute::get(function (): string {
-            $count = $this->activities_count ?? $this->activities->count();
+        return Attribute::get(fn (): string => $this->formatActivitiesCount());
+    }
 
-            return $count.' '.Str::plural('activity', $count);
-        });
+    /**
+     * Build the pluralized activity count, preferring an eager-loaded count.
+     */
+    private function formatActivitiesCount(): string
+    {
+        $count = $this->activities_count ?? $this->activities->count();
+
+        return $count.' '.Str::plural('activity', $count);
     }
 
     /**

@@ -51,7 +51,15 @@ class Training extends Model
      */
     protected function nameFormatted(): Attribute
     {
-        return Attribute::get(fn (): string => $this->date->format(config('dofit.date_format')).' - '.$this->name);
+        return Attribute::get(fn (): string => $this->formatName());
+    }
+
+    /**
+     * Build the "date - name" label shown in listings.
+     */
+    private function formatName(): string
+    {
+        return $this->date->format(config('dofit.date_format')).' - '.$this->name;
     }
 
     /**
@@ -61,11 +69,17 @@ class Training extends Model
      */
     protected function activitiesFormatted(): Attribute
     {
-        return Attribute::get(function (): string {
-            $count = $this->activities_count ?? $this->activities->count();
+        return Attribute::get(fn (): string => $this->formatActivitiesCount());
+    }
 
-            return $count.' '.Str::plural('activity', $count);
-        });
+    /**
+     * Build the pluralized activity count, preferring an eager-loaded count.
+     */
+    private function formatActivitiesCount(): string
+    {
+        $count = $this->activities_count ?? $this->activities->count();
+
+        return $count.' '.Str::plural('activity', $count);
     }
 
     /**

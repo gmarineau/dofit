@@ -1,0 +1,31 @@
+{
+    frankenphp
+    order php_server before file_server
+}
+
+{$SERVER_NAME} {
+    root * /app/public
+
+    encode zstd br gzip
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options SAMEORIGIN
+        Referrer-Policy strict-origin-when-cross-origin
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        -Server
+    }
+
+    @static {
+        file
+        path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    handle /img/* {
+        try_files {path} {path}/ /index.php?{query}
+    }
+
+    php_server
+}

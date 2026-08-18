@@ -38,11 +38,17 @@ class Activity extends Model
      */
     protected function sequencesFormatted(): Attribute
     {
-        return Attribute::get(function (): string {
-            $count = $this->sequences_count ?? $this->sequences->count();
+        return Attribute::get(fn (): string => $this->formatSequencesCount());
+    }
 
-            return $count.' '.Str::plural('sequence', $count);
-        });
+    /**
+     * Build the pluralized sequence count, preferring an eager-loaded count.
+     */
+    private function formatSequencesCount(): string
+    {
+        $count = $this->sequences_count ?? $this->sequences->count();
+
+        return $count.' '.Str::plural('sequence', $count);
     }
 
     /**

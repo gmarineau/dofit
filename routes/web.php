@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\LogoutController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -50,12 +50,5 @@ Route::middleware('auth')->group(function () {
         Route::livewire('/', 'pages::reports.index')->name('index');
     });
 
-    Route::post('/logout', function () {
-        Auth::logout();
-
-        session()->invalidate();
-        session()->regenerateToken();
-
-        return redirect()->route('login');
-    })->name('logout');
+    Route::post('/logout', LogoutController::class)->name('logout');
 });

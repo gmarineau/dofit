@@ -28,8 +28,8 @@ class MetricService
             ->reverse();
 
         return [
-            'labels' => $metrics->map(fn (Metric $metric): string => $metric->date->format('d.m'))->values()->all(),
-            'values' => $metrics->map(fn (Metric $metric): float => (float) $metric->value)->values()->all(),
+            'labels' => array_values($metrics->map(fn (Metric $metric): string => $metric->date->format('d.m'))->all()),
+            'values' => array_values($metrics->map(fn (Metric $metric): float => (float) $metric->value)->all()),
         ];
     }
 }

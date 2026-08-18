@@ -52,8 +52,8 @@ class ActivityTypeService
             ->reverse();
 
         return [
-            'repetition' => $sequences->map(fn (Sequence $sequence): int => $sequence->repetition)->values()->all(),
-            'weight' => $sequences->map(fn (Sequence $sequence): float => $sequence->weight ?? 0.0)->values()->all(),
+            'repetition' => array_values($sequences->map(fn (Sequence $sequence): int => $sequence->repetition)->all()),
+            'weight' => array_values($sequences->map(fn (Sequence $sequence): float => $sequence->weight ?? 0.0)->all()),
         ];
     }
 }

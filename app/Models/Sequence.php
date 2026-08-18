@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $value
- * @property-read string|null $weight_formatted
+ * @property-read string $weight_formatted
  * @property-read Activity $activity
  */
 #[Fillable(['repetition', 'weight', 'activity_id', 'unit'])]
@@ -50,27 +50,42 @@ class Sequence extends Model
      */
     protected function value(): Attribute
     {
-        return Attribute::get(function (): string {
-            $parts = [(string) $this->repetition];
-
-            if ($this->weight !== null) {
-                $parts[] = (string) $this->weight_formatted;
-            }
-
-            return implode(' x ', $parts);
-        });
+        return Attribute::get(fn (): string => $this->formatValue());
     }
 
     /**
-     * The weight rounded to one decimal, or null when no weight was recorded.
+     * Build the "repetition x weight" summary, dropping the weight when unset.
+     */
+    private function formatValue(): string
+    {
+        $parts = [(string) $this->repetition];
+
+        if ($this->weight !== null) {
+            $parts[] = $this->formatWeight();
+        }
+
+        return implode(' x ', $parts);
+    }
+
+    /**
+     * The weight rounded to one decimal, empty when no weight was recorded.
      *
-     * @return Attribute<string|null, never>
+     * @return Attribute<string, never>
      */
     protected function weightFormatted(): Attribute
     {
-        return Attribute::get(fn (): ?string => $this->weight === null
-            ? null
-            : number_format($this->weight, 1, '.', "'"));
+        return Attribute::get(fn (): string => $this->formatWeight());
+    }
+
+    /**
+     * Round the weight to one decimal, or an empty string when no weight was
+     * recorded.
+     */
+    private function formatWeight(): string
+    {
+        return $this->weight === null
+            ? ''
+            : number_format($this->weight, 1, '.', "'");
     }
 
     /**
