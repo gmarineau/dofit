@@ -27,7 +27,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property list<string> $primary_muscles
  * @property list<string> $secondary_muscles
  * @property list<string> $instructions
- * @property list<string> $image_paths
+ * @property list<string>|null $image_paths
  * @property-read Collection<int, ActivityType> $activityTypes
  */
 #[Fillable([

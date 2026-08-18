@@ -23,6 +23,9 @@ return new class extends Migration
             $table->json('primary_muscles');
             $table->json('secondary_muscles');
             $table->json('instructions');
+            // Where the illustrations live upstream, so `dofit:import-exercises`
+            // can fetch them on demand. Null until the library is imported.
+            $table->json('image_paths')->nullable();
 
             $table->index('name');
             $table->index(['category', 'equipment']);

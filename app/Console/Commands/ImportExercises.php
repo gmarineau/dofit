@@ -226,7 +226,7 @@ class ImportExercises extends Command
             $exercise->clearMediaCollection(Exercise::ILLUSTRATIONS);
         }
 
-        foreach ($exercise->image_paths as $index => $path) {
+        foreach ($exercise->image_paths ?? [] as $index => $path) {
             $response = Http::timeout(20)->retry(2, 200)->get(self::IMAGE_URL.$path);
 
             if ($response->failed()) {
