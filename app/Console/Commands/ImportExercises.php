@@ -90,23 +90,34 @@ class ImportExercises extends Command
             throw new RuntimeException("HTTP {$response->status()}");
         }
 
-        return collect($response->json())
-            ->map(fn (array $exercise): array => [
-                'slug' => Str::slug($exercise['name']),
-                'name' => $exercise['name'],
-                'category' => $exercise['category'] ?? null,
-                'level' => $exercise['level'] ?? null,
-                'force' => $exercise['force'] ?? null,
-                'mechanic' => $exercise['mechanic'] ?? null,
-                'equipment' => $exercise['equipment'] ?? null,
-                'primary_muscles' => json_encode($exercise['primaryMuscles'] ?? []),
-                'secondary_muscles' => json_encode($exercise['secondaryMuscles'] ?? []),
-                'instructions' => json_encode($exercise['instructions'] ?? []),
-                'image_paths' => json_encode($exercise['images'] ?? []),
-            ])
+        return collect((array) $response->json())
+            ->map(fn (mixed $exercise): array => $this->toRow((array) $exercise))
             ->unique('slug')
             ->sortBy('name')
             ->values();
+    }
+
+    /**
+     * Turn one upstream entry into a row ready to be upserted.
+     *
+     * @param  array<string, mixed>  $exercise
+     * @return array<string, mixed>
+     */
+    protected function toRow(array $exercise): array
+    {
+        return [
+            'slug' => Str::slug((string) $exercise['name']),
+            'name' => $exercise['name'],
+            'category' => $exercise['category'] ?? null,
+            'level' => $exercise['level'] ?? null,
+            'force' => $exercise['force'] ?? null,
+            'mechanic' => $exercise['mechanic'] ?? null,
+            'equipment' => $exercise['equipment'] ?? null,
+            'primary_muscles' => json_encode($exercise['primaryMuscles'] ?? []),
+            'secondary_muscles' => json_encode($exercise['secondaryMuscles'] ?? []),
+            'instructions' => json_encode($exercise['instructions'] ?? []),
+            'image_paths' => json_encode($exercise['images'] ?? []),
+        ];
     }
 
     /**

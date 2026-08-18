@@ -75,9 +75,11 @@ class Exercise extends Model implements HasMedia
      */
     public function registerMediaConversions(?Media $media = null): void
     {
+        // nonQueued() belongs on the conversion; fit() hands back the image
+        // driver, so nothing may be chained after it.
         $this->addMediaConversion('thumb')
-            ->fit(Fit::Crop, 160, 160)
-            ->nonQueued();
+            ->nonQueued()
+            ->fit(Fit::Crop, 160, 160);
     }
 
     /**
