@@ -1,15 +1,19 @@
-@props(['title' => null, 'back' => null])
+@props(['title' => null, 'back' => null, 'subtitle' => null])
 
-<div {{ $attributes->class('flex items-center gap-3') }}>
+<div {{ $attributes->class('mb-8 flex items-center gap-3') }}>
     @if ($back)
-        <x-button :href="$back" as="a" variant="secondary" size="icon" wire:navigate aria-label="{{ __('Back') }}">
-            <x-icons.chevron-left />
+        <x-button :href="$back" as="a" variant="ghost" size="icon" class="-ml-3" wire:navigate aria-label="{{ __('Back') }}">
+            <x-heroicon-o-chevron-left class="size-5" />
         </x-button>
     @endif
 
-    <h1 class="min-w-0 flex-1 truncate text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-        {{ $title ?? $slot }}
-    </h1>
+    <div class="min-w-0 flex-1">
+        <h1 class="truncate text-3xl font-extrabold tracking-tight text-ink">{{ $title ?? $slot }}</h1>
+
+        @if ($subtitle)
+            <p class="mt-1 text-sm font-semibold text-ink-soft">{{ $subtitle }}</p>
+        @endif
+    </div>
 
     {{ $actions ?? '' }}
 </div>

@@ -24,6 +24,7 @@ it('renders every authenticated page', function (string $route) {
         ->assertOk();
 })->with(fn () => [
     '/',
+    '/trainings',
     '/trainings/create',
     '/activities',
     '/metrics',
@@ -55,4 +56,16 @@ it('renders every guest page', function (string $route) {
 
 it('redirects guests to the login page', function () {
     $this->get('/')->assertRedirect(route('login'));
+});
+
+it('gives every page a translated browser title', function () {
+    $this->actingAs($this->user)
+        ->get('/')
+        ->assertSee('<title>'.__('Dashboard').' — '.config('app.name').'</title>', escape: false);
+
+    $this->get(route('trainings.index'))
+        ->assertSee('<title>'.__('Trainings').' — '.config('app.name').'</title>', escape: false);
+
+    $this->get(route('trainings.show', $this->training))
+        ->assertSee('<title>'.$this->training->name.' — '.config('app.name').'</title>', escape: false);
 });

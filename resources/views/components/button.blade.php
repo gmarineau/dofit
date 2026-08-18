@@ -6,23 +6,24 @@
 
 @php
     $variants = [
-        'primary' => 'bg-brand-700 text-white hover:bg-brand-800 focus-visible:outline-brand-700 dark:bg-brand-600 dark:hover:bg-brand-500',
-        'secondary' => 'bg-white text-zinc-700 ring-1 ring-zinc-300 ring-inset hover:bg-zinc-50 focus-visible:outline-zinc-400 dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700 dark:hover:bg-zinc-700',
-        'success' => 'bg-success text-zinc-900 hover:brightness-95 focus-visible:outline-success',
-        'danger' => 'bg-danger text-white hover:brightness-95 focus-visible:outline-danger',
-        'ghost' => 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-zinc-400 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100',
+        'primary' => 'bg-accent text-accent-ink hover:brightness-110',
+        'secondary' => 'border border-line bg-canvas text-ink hover:bg-raised',
+        'ghost' => 'text-ink-soft hover:bg-raised hover:text-ink',
+        'danger' => 'bg-danger text-white hover:brightness-110',
+        'quiet-danger' => 'text-ink-muted hover:bg-raised hover:text-danger',
     ];
 
     $sizes = [
-        'base' => 'gap-2 px-4 py-2 text-sm',
-        'sm' => 'gap-1.5 px-2.5 py-1.5 text-xs',
-        'icon' => 'p-2',
+        'base' => 'h-11 gap-2 rounded-full px-5 text-sm',
+        'sm' => 'h-9 gap-1.5 rounded-full px-4 text-xs',
+        'icon' => 'size-11 rounded-full',
+        'icon-sm' => 'size-9 rounded-full',
     ];
 
     $classes = implode(' ', [
-        'inline-flex items-center justify-center rounded-lg font-medium transition',
-        'focus-visible:outline-2 focus-visible:outline-offset-2',
-        'disabled:pointer-events-none disabled:opacity-60',
+        'inline-flex shrink-0 items-center justify-center font-bold transition',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+        'disabled:pointer-events-none disabled:opacity-50',
         $variants[$variant] ?? $variants['primary'],
         $sizes[$size] ?? $sizes['base'],
     ]);

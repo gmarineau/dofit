@@ -1,110 +1,83 @@
 @php
     $links = [
-        ['route' => 'dashboard', 'label' => __('Trainings'), 'icon' => 'dumbbell'],
-        ['route' => 'metrics.index', 'label' => __('Metrics'), 'icon' => 'scale'],
-        ['route' => 'activities.index', 'label' => __('Activities'), 'icon' => 'chart-line'],
-        ['route' => 'reports.index', 'label' => __('Reports'), 'icon' => 'clipboard'],
-        ['route' => 'activity-types.index', 'label' => __('Activity Types'), 'icon' => 'list'],
+        ['route' => 'dashboard', 'label' => __('Dashboard'), 'icon' => 'o-home'],
+        ['route' => 'trainings.index', 'label' => __('Trainings'), 'icon' => 'o-bolt'],
+        ['route' => 'metrics.index', 'label' => __('Metrics'), 'icon' => 'o-scale'],
+        ['route' => 'activities.index', 'label' => __('Activities'), 'icon' => 'o-chart-bar'],
+        ['route' => 'reports.index', 'label' => __('Reports'), 'icon' => 'o-clipboard-document-list'],
+        ['route' => 'activity-types.index', 'label' => __('Activity Types'), 'icon' => 'o-list-bullet'],
     ];
 @endphp
 
-<nav x-data="{ open: false }" class="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-    <div class="mx-auto w-full max-w-3xl px-4">
-        <div class="flex h-14 items-center justify-between">
-            <a href="{{ route('dashboard') }}" class="text-lg font-bold text-brand-700 dark:text-brand-300" wire:navigate>
-                {{ config('app.name') }}
+{{-- Desktop: a quiet bar along the top. --}}
+<header class="sticky top-0 z-30 hidden bg-canvas sm:block">
+    <div class="mx-auto flex h-20 w-full max-w-2xl items-center gap-1 px-4">
+        <a href="{{ route('dashboard') }}" wire:navigate class="mr-3 text-xl font-extrabold tracking-tight text-ink">
+            {{ config('app.name') }}
+        </a>
+
+        @foreach ($links as $link)
+            <a
+                href="{{ route($link['route']) }}"
+                wire:navigate
+                @class([
+                    'rounded-full px-3 py-1.5 text-sm font-bold whitespace-nowrap transition',
+                    'bg-accent-soft text-accent' => request()->routeIs($link['route']),
+                    'text-ink-soft hover:text-ink' => ! request()->routeIs($link['route']),
+                ])
+            >
+                {{ $link['label'] }}
             </a>
+        @endforeach
 
-            <div class="hidden items-center gap-1 sm:flex">
-                @foreach ($links as $link)
-                    <a
-                        href="{{ route($link['route']) }}"
-                        wire:navigate
-                        @class([
-                            'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition',
-                            'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300' => request()->routeIs($link['route']),
-                            'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100' => ! request()->routeIs($link['route']),
-                        ])
-                    >
-                        <x-dynamic-component :component="'icons.'.$link['icon']" class="size-4" />
-                        <span class="hidden lg:inline">{{ $link['label'] }}</span>
-                    </a>
-                @endforeach
-            </div>
+        <div class="ml-auto flex items-center gap-1">
+            <x-theme-toggle />
 
-            <div class="flex items-center gap-1">
-                <div class="relative hidden sm:block" x-data="{ open: false }" x-on:click.outside="open = false">
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                        x-on:click="open = ! open"
-                    >
-                        <x-icons.user class="size-4" />
-                        {{ auth()->user()->name }}
-                    </button>
-
-                    <div
-                        x-show="open"
-                        x-cloak
-                        x-transition
-                        class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-lg bg-white py-1 shadow-lg ring-1 ring-zinc-900/5 dark:bg-zinc-800 dark:ring-white/10"
-                    >
-                        <a href="{{ route('account') }}" wire:navigate class="block px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                            {{ __('Account') }}
-                        </a>
-
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                {{ __('Log out') }}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <button
-                    type="button"
-                    class="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 sm:hidden dark:text-zinc-400 dark:hover:bg-zinc-800"
-                    x-on:click="open = ! open"
-                    aria-label="{{ __('Toggle navigation') }}"
-                >
-                    <x-icons.menu />
-                </button>
-            </div>
+            <a
+                href="{{ route('account') }}"
+                wire:navigate
+                @class([
+                    'inline-flex size-11 items-center justify-center rounded-full transition',
+                    'bg-accent-soft text-accent' => request()->routeIs('account*'),
+                    'text-ink-soft hover:bg-raised hover:text-ink' => ! request()->routeIs('account*'),
+                ])
+                aria-label="{{ __('Account') }}"
+            >
+                <x-heroicon-o-user-circle class="size-5" />
+            </a>
         </div>
     </div>
+</header>
 
-    <div x-show="open" x-cloak class="border-t border-zinc-200 sm:hidden dark:border-zinc-800">
-        <div class="space-y-1 px-4 py-3">
-            @foreach ($links as $link)
-                <a
-                    href="{{ route($link['route']) }}"
-                    wire:navigate
-                    x-on:click="open = false"
-                    @class([
-                        'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium',
-                        'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300' => request()->routeIs($link['route']),
-                        'text-zinc-600 dark:text-zinc-400' => ! request()->routeIs($link['route']),
-                    ])
-                >
-                    <x-dynamic-component :component="'icons.'.$link['icon']" class="size-4" />
-                    {{ $link['label'] }}
-                </a>
-            @endforeach
+{{-- Mobile: a tab bar within thumb reach. --}}
+<nav class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-canvas pb-[env(safe-area-inset-bottom)] sm:hidden">
+    <div class="flex items-stretch">
+        @foreach ($links as $link)
+            <a
+                href="{{ route($link['route']) }}"
+                wire:navigate
+                @class([
+                    'flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-bold transition',
+                    'text-accent' => request()->routeIs($link['route']),
+                    'text-ink-muted' => ! request()->routeIs($link['route']),
+                ])
+            >
+                <x-dynamic-component :component="'heroicon-'.$link['icon']" class="size-6" />
+                <span class="max-w-full truncate px-0.5">{{ $link['label'] }}</span>
+            </a>
+        @endforeach
 
-            <div class="mt-2 border-t border-zinc-200 pt-2 dark:border-zinc-800">
-                <a href="{{ route('account') }}" wire:navigate x-on:click="open = false" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    <x-icons.user class="size-4" />
-                    {{ auth()->user()->name }}
-                </a>
-
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                        {{ __('Log out') }}
-                    </button>
-                </form>
-            </div>
-        </div>
+        <a
+            href="{{ route('account') }}"
+            wire:navigate
+            @class([
+                'flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-bold transition',
+                'text-accent' => request()->routeIs('account*'),
+                'text-ink-muted' => ! request()->routeIs('account*'),
+            ])
+        >
+            <x-heroicon-o-user-circle class="size-6" />
+            <span class="max-w-full truncate px-0.5">{{ __('Account') }}</span>
+        </a>
     </div>
 </nav>

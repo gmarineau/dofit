@@ -3,10 +3,9 @@
 use App\Models\ActivityType;
 use App\Services\ActivityTypeService;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Activity Types')] class extends Component
+new class extends Component
 {
     public ?int $deletingId = null;
 
@@ -52,41 +51,47 @@ new #[Title('Activity Types')] class extends Component
 
         unset($this->activityTypes);
     }
+
+    /**
+     * Render the page with its translated title.
+     */
+    public function render()
+    {
+        return $this->view()->title(__('Activity Types'));
+    }
 };
 ?>
 
 <div>
     <x-page-header :title="__('Activity Types')" />
 
-    <div class="mt-6">
-        @if ($this->activityTypes->isEmpty())
-            <x-empty-state>{{ __('No activity type yet. They are created as you log activities.') }}</x-empty-state>
-        @else
-            <x-card>
-                <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                    @foreach ($this->activityTypes as $activityType)
-                        <li wire:key="activity-type-{{ $activityType->id }}" class="flex items-center gap-3 px-4 py-3">
-                            <div class="min-w-0 flex-1">
-                                <span class="block truncate font-medium">{{ $activityType->type }}</span>
-                                <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ $activityType->activities_formatted }}</span>
-                            </div>
+    @if ($this->activityTypes->isNotEmpty())
+        <ul>
+            @foreach ($this->activityTypes as $activityType)
+                <li wire:key="activity-type-{{ $activityType->id }}" class="group flex items-center gap-3 border-b border-line py-4 last:border-0">
+                    <div class="min-w-0 flex-1">
+                        <div class="truncate font-bold text-ink">{{ $activityType->type }}</div>
+                        <div class="mt-0.5 text-sm font-semibold text-ink-soft">{{ $activityType->activities_formatted }}</div>
+                    </div>
 
-                            <x-button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                class="shrink-0 hover:text-danger"
-                                wire:click="confirmDelete({{ $activityType->id }})"
-                                aria-label="{{ __('Delete activity type') }}"
-                            >
-                                <x-icons.x class="size-4" />
-                            </x-button>
-                        </li>
-                    @endforeach
-                </ul>
-            </x-card>
-        @endif
-    </div>
+                    <x-button
+                            type="button"
+                            variant="quiet-danger"
+                            size="icon-sm"
+                            class="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
+                            wire:click="confirmDelete({{ $activityType->id }})"
+                            aria-label="{{ __('Delete activity type') }}"
+                        >
+                            <x-heroicon-o-x-mark class="size-4" />
+                        </x-button>
+                </li>
+            @endforeach
+        </ul>
+    @else
+        <x-empty-state icon="o-list-bullet">
+            {{ __('No activity type yet. They are created as you log activities.') }}
+        </x-empty-state>
+    @endif
 
     <x-confirm-delete
         :show="$deletingId !== null"

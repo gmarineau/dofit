@@ -3,11 +3,10 @@
 use App\Models\Training;
 use App\Services\ActivityTypeService;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new #[Title('New activity')] class extends Component
+new class extends Component
 {
     public Training $training;
 
@@ -50,44 +49,49 @@ new #[Title('New activity')] class extends Component
 
         $this->redirect(route('activities.show', $activity), navigate: true);
     }
+
+    /**
+     * Render the page with its translated title.
+     */
+    public function render()
+    {
+        return $this->view()->title(__('New activity'));
+    }
 };
 ?>
 
 <div>
     <x-page-header :title="__('New activity')" :back="route('trainings.show', $training)" />
 
-    <div class="mt-6">
-        <x-form-card>
-            <form wire:submit="save">
-                <x-field :label="__('Type')" for="type" :error="$errors->first('type')">
-                    <x-input
-                        id="type"
-                        type="text"
-                        list="activity-types"
-                        wire:model="type"
-                        :invalid="$errors->has('type')"
-                        autocomplete="off"
-                        autofocus
-                    />
+    <form wire:submit="save">
+        <x-field :label="__('Type')" for="type" :error="$errors->first('type')">
+            <x-input id="type" type="text" wire:model="type" :invalid="$errors->has('type')" autocomplete="off" autofocus />
+        </x-field>
 
-                    <datalist id="activity-types">
-                        @foreach ($this->activityTypes as $activityType)
-                            <option value="{{ $activityType->type }}"></option>
-                        @endforeach
-                    </datalist>
-                </x-field>
+        @if ($this->activityTypes->isNotEmpty())
+            <div class="mb-5 -mt-2 flex flex-wrap gap-2">
+                @foreach ($this->activityTypes as $activityType)
+                    <button
+                        type="button"
+                        wire:key="suggestion-{{ $activityType->id }}"
+                        wire:click="$set('type', @js($activityType->type))"
+                        class="rounded-full bg-raised px-3 py-1.5 text-xs font-bold text-ink-soft transition hover:bg-accent-soft hover:text-accent"
+                    >
+                        {{ $activityType->type }}
+                    </button>
+                @endforeach
+            </div>
+        @endif
 
-                <div class="flex items-center gap-3">
-                    <x-button type="submit">
-                        {{ __('Save') }}
-                        <x-icons.spinner wire:loading wire:target="save" />
-                    </x-button>
+        <div class="flex items-center gap-3 pt-2">
+            <x-button type="submit" class="flex-1 sm:flex-none">
+                {{ __('Save') }}
+                <x-heroicon-o-arrow-path class="size-4 animate-spin" wire:loading wire:target="save" />
+            </x-button>
 
-                    <a href="{{ route('trainings.show', $training) }}" wire:navigate class="text-sm text-zinc-500 hover:underline dark:text-zinc-400">
-                        {{ __('Cancel') }}
-                    </a>
-                </div>
-            </form>
-        </x-form-card>
-    </div>
+            <x-button :href="route('trainings.show', $training)" as="a" variant="ghost" wire:navigate>
+                {{ __('Cancel') }}
+            </x-button>
+        </div>
+    </form>
 </div>

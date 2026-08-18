@@ -22,11 +22,11 @@ new class extends Component
     }
 
     /**
-     * Show the activity type in the browser tab.
+     * Render the page, showing the activity type in the browser tab.
      */
-    public function title(): string
+    public function render()
     {
-        return $this->activity->activityType->type;
+        return $this->view()->title($this->activity->activityType->type);
     }
 
     /**
@@ -75,45 +75,64 @@ new class extends Component
 ?>
 
 <div>
-    <x-page-header :title="$activity->activityType->type" :back="route('trainings.show', $activity->training)">
+    <x-page-header
+        :title="$activity->activityType->type"
+        :subtitle="$activity->training->date->translatedFormat('j F Y')"
+        :back="route('trainings.show', $activity->training)"
+    >
         <x-slot:actions>
-            <x-button :href="route('sequences.create', $activity)" as="a" size="icon" wire:navigate aria-label="{{ __('New sequence') }}">
-                <x-icons.plus />
+            <x-button :href="route('sequences.create', $activity)" as="a" wire:navigate class="max-sm:hidden">
+                <x-heroicon-o-plus class="size-4" />
+                {{ __('New sequence') }}
             </x-button>
         </x-slot:actions>
     </x-page-header>
 
-    <div class="mt-6">
-        @if ($this->sequences->isEmpty())
-            <x-empty-state>{{ __('No sequence recorded yet.') }}</x-empty-state>
-        @else
-            <x-card>
-                <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                    @foreach ($this->sequences as $sequence)
-                        <li wire:key="sequence-{{ $sequence->id }}" class="flex items-center gap-3 px-4 py-3">
-                            <span class="min-w-0 flex-1 font-medium tabular-nums">
-                                {{ $sequence->value }}
-                                @if ($sequence->weight !== null)
-                                    <span class="font-normal text-zinc-500 dark:text-zinc-400">{{ $sequence->unit->label() }}</span>
-                                @endif
-                            </span>
+    @if ($this->sequences->isNotEmpty())
+        <ul>
+            @foreach ($this->sequences as $sequence)
+                {{-- The load is the point of the row, so it gets the size. --}}
+                <li wire:key="sequence-{{ $sequence->id }}" class="group flex items-center gap-4 border-b border-line py-4 last:border-0">
+                    <span class="numeric w-6 shrink-0 text-sm font-bold text-ink-muted">{{ $loop->iteration }}</span>
 
-                            <x-button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                class="shrink-0 hover:text-danger"
-                                wire:click="confirmDelete({{ $sequence->id }})"
-                                aria-label="{{ __('Delete sequence') }}"
-                            >
-                                <x-icons.x class="size-4" />
-                            </x-button>
-                        </li>
-                    @endforeach
-                </ul>
-            </x-card>
-        @endif
-    </div>
+                    <div class="flex min-w-0 flex-1 items-baseline gap-1.5">
+                        @if ($sequence->weight !== null)
+                            <span class="numeric text-2xl leading-none font-extrabold text-ink">{{ $sequence->weight_formatted }}</span>
+                            <span class="text-sm font-semibold text-ink-muted">{{ $sequence->unit->label() }}</span>
+                        @else
+                            <span class="font-semibold text-ink-soft">{{ __('Bodyweight') }}</span>
+                        @endif
+                    </div>
+
+                    <x-badge class="numeric shrink-0">&times;&nbsp;{{ $sequence->repetition }}</x-badge>
+
+                    <x-button
+                            type="button"
+                            variant="quiet-danger"
+                            size="icon-sm"
+                            class="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
+                            wire:click="confirmDelete({{ $sequence->id }})"
+                            aria-label="{{ __('Delete sequence') }}"
+                        >
+                            <x-heroicon-o-x-mark class="size-4" />
+                        </x-button>
+                </li>
+            @endforeach
+        </ul>
+    @else
+        <x-empty-state icon="o-bolt">
+            {{ __('No sequence recorded yet.') }}
+
+            <x-slot:action>
+                <x-button :href="route('sequences.create', $activity)" as="a" wire:navigate>
+                    <x-heroicon-o-plus class="size-4" />
+                    {{ __('New sequence') }}
+                </x-button>
+            </x-slot:action>
+        </x-empty-state>
+    @endif
+
+    <x-fab :href="route('sequences.create', $activity)" wire:navigate :label="__('New sequence')" />
 
     <x-confirm-delete :show="$deletingId !== null" :title="__('Delete this sequence?')" />
 </div>

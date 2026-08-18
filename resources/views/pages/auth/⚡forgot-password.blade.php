@@ -2,11 +2,10 @@
 
 use Illuminate\Support\Facades\Password;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new #[Layout('layouts::guest')] #[Title('Forgot password')] class extends Component
+new #[Layout('layouts::guest')] class extends Component
 {
     #[Validate('required|string|email')]
     public string $email = '';
@@ -30,37 +29,47 @@ new #[Layout('layouts::guest')] #[Title('Forgot password')] class extends Compon
 
         $this->reset('email');
     }
+
+    /**
+     * Render the page with its translated title.
+     */
+    public function render()
+    {
+        return $this->view()->title(__('Forgot password'));
+    }
 };
 ?>
 
 <div>
-    <x-form-card>
-        <h1 class="mb-1 text-lg font-semibold">{{ __('Forgot password') }}</h1>
-        <p class="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
-            {{ __('We will email you a link to choose a new one.') }}
+    <div class="mb-8 text-center">
+        <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-accent text-white dark:text-canvas">
+            <x-heroicon-o-bolt class="size-6" />
+        </div>
+
+        <h1 class="text-xl font-semibold tracking-tight text-ink">{{ __('Forgot password') }}</h1>
+        <p class="mt-1 text-sm text-ink-soft">{{ __('We will email you a link to choose a new one.') }}</p>
+    </div>
+
+    @if (session('status'))
+        <p class="mb-5 rounded-xl bg-accent-soft px-3.5 py-2.5 text-sm text-accent">
+            {{ session('status') }}
         </p>
+    @endif
 
-        @if (session('status'))
-            <p class="mb-4 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800 dark:bg-brand-950 dark:text-brand-200">
-                {{ session('status') }}
-            </p>
-        @endif
+    <form wire:submit="sendResetLink">
+        <x-field :label="__('E-mail')" for="email" :error="$errors->first('email')">
+            <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="username" autofocus required />
+        </x-field>
 
-        <form wire:submit="sendResetLink">
-            <x-field :label="__('E-mail')" for="email" :error="$errors->first('email')">
-                <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="username" autofocus required />
-            </x-field>
+        <x-button type="submit" class="w-full">
+            {{ __('Email password reset link') }}
+            <x-heroicon-o-arrow-path class="size-4 animate-spin" wire:loading wire:target="sendResetLink" />
+        </x-button>
+    </form>
 
-            <x-button type="submit" class="w-full">
-                {{ __('Email password reset link') }}
-                <x-icons.spinner wire:loading wire:target="sendResetLink" />
-            </x-button>
-        </form>
-
-        <p class="mt-5 text-center text-sm">
-            <a href="{{ route('login') }}" wire:navigate class="text-brand-700 hover:underline dark:text-brand-300">
-                {{ __('Back to log in') }}
-            </a>
-        </p>
-    </x-form-card>
+    <p class="mt-6 text-center text-sm">
+        <a href="{{ route('login') }}" wire:navigate class="text-ink-soft hover:text-ink">
+            {{ __('Back to log in') }}
+        </a>
+    </p>
 </div>

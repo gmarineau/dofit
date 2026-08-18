@@ -2,10 +2,9 @@
 
 use App\Models\Metric;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Metrics')] class extends Component
+new class extends Component
 {
     public ?int $deletingId = null;
 
@@ -53,52 +52,67 @@ new #[Title('Metrics')] class extends Component
 
         unset($this->metrics);
     }
+
+    /**
+     * Render the page with its translated title.
+     */
+    public function render()
+    {
+        return $this->view()->title(__('Metrics'));
+    }
 };
 ?>
 
 <div>
     <x-page-header :title="__('Metrics')">
         <x-slot:actions>
-            <x-button :href="route('metrics.create')" as="a" size="icon" wire:navigate aria-label="{{ __('New metric') }}">
-                <x-icons.plus />
+            <x-button :href="route('metrics.create')" as="a" wire:navigate class="max-sm:hidden">
+                <x-heroicon-o-plus class="size-4" />
+                {{ __('New metric') }}
             </x-button>
         </x-slot:actions>
     </x-page-header>
 
-    <div class="mt-6">
-        @if ($this->metrics->isEmpty())
-            <x-empty-state>{{ __('No measurement recorded yet.') }}</x-empty-state>
-        @else
-            <x-card>
-                <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                    @foreach ($this->metrics as $metric)
-                        <li wire:key="metric-{{ $metric->id }}" class="flex items-center gap-3 px-4 py-3">
-                            <div class="min-w-0 flex-1">
-                                <span class="block font-medium tabular-nums">
-                                    {{ $metric->value_formatted }}
-                                    <span class="font-normal text-zinc-500 dark:text-zinc-400">{{ __('kg') }}</span>
-                                </span>
-                                <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                                    {{ $metric->date->format(config('dofit.date_format')) }}
-                                </span>
-                            </div>
+    @if ($this->metrics->isNotEmpty())
+        <ul>
+            @foreach ($this->metrics as $metric)
+                <li wire:key="metric-{{ $metric->id }}" class="group flex items-center gap-4 border-b border-line py-4 last:border-0">
+                    <div class="flex min-w-0 flex-1 items-baseline gap-1.5">
+                        <span class="numeric text-2xl leading-none font-extrabold text-ink">{{ $metric->value_formatted }}</span>
+                        <span class="text-sm font-semibold text-ink-muted">{{ __('kg') }}</span>
+                    </div>
 
-                            <x-button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                class="shrink-0 hover:text-danger"
-                                wire:click="confirmDelete({{ $metric->id }})"
-                                aria-label="{{ __('Delete metric') }}"
-                            >
-                                <x-icons.x class="size-4" />
-                            </x-button>
-                        </li>
-                    @endforeach
-                </ul>
-            </x-card>
-        @endif
-    </div>
+                    <span class="numeric shrink-0 text-sm font-semibold text-ink-soft">
+                        {{ $metric->date->translatedFormat('j M Y') }}
+                    </span>
+
+                    <x-button
+                            type="button"
+                            variant="quiet-danger"
+                            size="icon-sm"
+                            class="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
+                            wire:click="confirmDelete({{ $metric->id }})"
+                            aria-label="{{ __('Delete metric') }}"
+                        >
+                            <x-heroicon-o-x-mark class="size-4" />
+                        </x-button>
+                </li>
+            @endforeach
+        </ul>
+    @else
+        <x-empty-state icon="o-scale">
+            {{ __('No measurement recorded yet.') }}
+
+            <x-slot:action>
+                <x-button :href="route('metrics.create')" as="a" wire:navigate>
+                    <x-heroicon-o-plus class="size-4" />
+                    {{ __('New metric') }}
+                </x-button>
+            </x-slot:action>
+        </x-empty-state>
+    @endif
+
+    <x-fab :href="route('metrics.create')" wire:navigate :label="__('New metric')" />
 
     <x-confirm-delete :show="$deletingId !== null" :title="__('Delete this measurement?')" />
 </div>

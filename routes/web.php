@@ -14,6 +14,7 @@ Route::middleware('auth')->group(function () {
     Route::livewire('/', 'pages::dashboard')->name('dashboard');
 
     Route::prefix('trainings')->name('trainings.')->group(function () {
+        Route::livewire('/', 'pages::trainings.index')->name('index');
         Route::livewire('create', 'pages::trainings.create')->name('create');
         Route::livewire('{training}', 'pages::trainings.show')->name('show');
     });

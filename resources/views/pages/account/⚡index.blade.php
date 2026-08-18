@@ -1,10 +1,9 @@
 <?php
 
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Account')] class extends Component
+new class extends Component
 {
     /**
      * The signed-in user's settings, in a stable order.
@@ -16,59 +15,77 @@ new #[Title('Account')] class extends Component
     {
         return auth()->user()->settings()->orderBy('key')->get();
     }
+
+    /**
+     * Render the page with its translated title.
+     */
+    public function render()
+    {
+        return $this->view()->title(__('Account'));
+    }
 };
 ?>
 
 <div>
-    <x-page-header :title="__('Account')" />
-
     @php($user = auth()->user())
 
-    <div class="mt-6 space-y-6">
-        <x-card>
-            <x-slot:header>
-                <div class="flex items-center justify-between">
-                    {{ __('Info') }}
+    <x-page-header :title="__('Account')" />
 
-                    <x-button :href="route('account.edit')" as="a" variant="secondary" size="sm" wire:navigate>
-                        <x-icons.pencil class="size-3.5" />
-                        {{ __('Edit') }}
-                    </x-button>
-                </div>
-            </x-slot:header>
+    <div class="mb-8 flex items-center gap-4">
+        <div class="numeric flex size-14 shrink-0 items-center justify-center rounded-full bg-accent-soft text-lg font-extrabold text-accent">
+            {{ $user->initials() }}
+        </div>
 
-            <dl class="divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-                <div class="flex items-center justify-between gap-4 px-4 py-3">
-                    <dt class="text-zinc-500 dark:text-zinc-400">{{ __('E-mail') }}</dt>
-                    <dd class="truncate font-medium">{{ $user->email }}</dd>
-                </div>
+        <div class="min-w-0 flex-1">
+            <div class="truncate font-bold text-ink">{{ $user->name }}</div>
+            <div class="truncate text-sm font-semibold text-ink-soft">{{ $user->email }}</div>
+        </div>
 
-                <div class="flex items-center justify-between gap-4 px-4 py-3">
-                    <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Name') }}</dt>
-                    <dd class="truncate font-medium">{{ $user->name }}</dd>
-                </div>
+        <x-button :href="route('account.edit')" as="a" variant="secondary" size="sm" wire:navigate>
+            {{ __('Edit') }}
+        </x-button>
+    </div>
 
-                <div class="flex items-center justify-between gap-4 px-4 py-3">
-                    <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Birthdate') }}</dt>
-                    <dd class="font-medium">{{ $user->birthdate_formatted ?: '—' }}</dd>
-                </div>
-            </dl>
-        </x-card>
+    <section class="mb-8">
+        <x-section-heading>{{ __('Info') }}</x-section-heading>
 
-        <x-card :header="__('Settings')">
-            <ul class="divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-                @foreach ($this->settings as $setting)
-                    <li wire:key="setting-{{ $setting->id }}" class="flex items-center justify-between gap-4 px-4 py-3">
-                        <span class="text-zinc-500 dark:text-zinc-400">{{ $setting->key }}</span>
+        <div class="flex items-center justify-between gap-4 border-b border-line py-4">
+            <span class="text-sm font-semibold text-ink-soft">{{ __('Birthdate') }}</span>
+            <span class="numeric text-sm font-bold text-ink">{{ $user->birthdate_formatted ?: '—' }}</span>
+        </div>
+    </section>
 
-                        <span class="ml-auto font-medium">{{ $setting->value }}</span>
+    <section class="mb-8">
+        <x-section-heading>{{ __('Settings') }}</x-section-heading>
 
-                        <x-button :href="route('settings.edit', $setting)" as="a" variant="ghost" size="icon" wire:navigate aria-label="{{ __('Edit setting') }}">
-                            <x-icons.pencil class="size-4" />
-                        </x-button>
-                    </li>
-                @endforeach
-            </ul>
-        </x-card>
+        <ul>
+            @foreach ($this->settings as $setting)
+                <li wire:key="setting-{{ $setting->id }}" class="border-b border-line last:border-0">
+                    <a href="{{ route('settings.edit', $setting) }}" wire:navigate class="flex items-center justify-between gap-4 py-4">
+                        <span class="text-sm font-semibold text-ink-soft">{{ $setting->key }}</span>
+
+                        <span class="flex items-center gap-2">
+                            <span class="numeric text-sm font-bold text-ink">{{ $setting->value }}</span>
+                            <x-heroicon-o-chevron-right class="size-4 text-ink-muted" />
+                        </span>
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+    </section>
+
+    <div class="flex items-center justify-between gap-4">
+        <div class="sm:hidden">
+            <x-theme-toggle class="-ml-3" />
+        </div>
+
+        <form method="POST" action="{{ route('logout') }}" class="ml-auto">
+            @csrf
+
+            <x-button type="submit" variant="ghost">
+                <x-heroicon-o-arrow-right-start-on-rectangle class="size-4" />
+                {{ __('Log out') }}
+            </x-button>
+        </form>
     </div>
 </div>

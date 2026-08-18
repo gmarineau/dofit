@@ -6,10 +6,9 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('layouts::guest')] #[Title('Reset password')] class extends Component
+new #[Layout('layouts::guest')] class extends Component
 {
     public string $token = '';
 
@@ -71,31 +70,43 @@ new #[Layout('layouts::guest')] #[Title('Reset password')] class extends Compone
 
         $this->redirect(route('login'), navigate: true);
     }
+
+    /**
+     * Render the page with its translated title.
+     */
+    public function render()
+    {
+        return $this->view()->title(__('Reset password'));
+    }
 };
 ?>
 
 <div>
-    <x-form-card>
-        <h1 class="mb-1 text-lg font-semibold">{{ __('Reset password') }}</h1>
-        <p class="mb-6 text-sm text-zinc-500 dark:text-zinc-400">{{ __('Choose a new password.') }}</p>
+    <div class="mb-8 text-center">
+        <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-accent text-white dark:text-canvas">
+            <x-heroicon-o-bolt class="size-6" />
+        </div>
 
-        <form wire:submit="resetPassword">
-            <x-field :label="__('E-mail')" for="email" :error="$errors->first('email')">
-                <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="username" required />
-            </x-field>
+        <h1 class="text-xl font-semibold tracking-tight text-ink">{{ __('Reset password') }}</h1>
+        <p class="mt-1 text-sm text-ink-soft">{{ __('Choose a new password.') }}</p>
+    </div>
 
-            <x-field :label="__('Password')" for="password" :error="$errors->first('password')">
-                <x-input id="password" type="password" wire:model="password" :invalid="$errors->has('password')" autocomplete="new-password" autofocus required />
-            </x-field>
+    <form wire:submit="resetPassword">
+        <x-field :label="__('E-mail')" for="email" :error="$errors->first('email')">
+            <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="username" required />
+        </x-field>
 
-            <x-field :label="__('Confirm password')" for="password_confirmation" :error="$errors->first('password_confirmation')">
-                <x-input id="password_confirmation" type="password" wire:model="password_confirmation" autocomplete="new-password" required />
-            </x-field>
+        <x-field :label="__('Password')" for="password" :error="$errors->first('password')">
+            <x-input id="password" type="password" wire:model="password" :invalid="$errors->has('password')" autocomplete="new-password" autofocus required />
+        </x-field>
 
-            <x-button type="submit" class="w-full">
-                {{ __('Reset password') }}
-                <x-icons.spinner wire:loading wire:target="resetPassword" />
-            </x-button>
-        </form>
-    </x-form-card>
+        <x-field :label="__('Confirm password')" for="password_confirmation" :error="$errors->first('password_confirmation')">
+            <x-input id="password_confirmation" type="password" wire:model="password_confirmation" autocomplete="new-password" required />
+        </x-field>
+
+        <x-button type="submit" class="w-full">
+            {{ __('Reset password') }}
+            <x-heroicon-o-arrow-path class="size-4 animate-spin" wire:loading wire:target="resetPassword" />
+        </x-button>
+    </form>
 </div>

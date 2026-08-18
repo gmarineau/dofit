@@ -17,12 +17,12 @@ beforeEach(function () {
 });
 
 it('lists the sequences of an activity in the order performed', function () {
-    $first = Sequence::factory()->for($this->activity)->create(['repetition' => 8, 'weight' => 40]);
-    $second = Sequence::factory()->for($this->activity)->create(['repetition' => 6, 'weight' => 45]);
+    Sequence::factory()->for($this->activity)->create(['repetition' => 8, 'weight' => 40]);
+    Sequence::factory()->for($this->activity)->create(['repetition' => 6, 'weight' => 45]);
 
     Livewire::actingAs($this->user)
         ->test('pages::activities.show', ['activity' => $this->activity])
-        ->assertSeeInOrder([$first->value, $second->value]);
+        ->assertSeeInOrder(['40.0', '45.0']);
 });
 
 it('prefills the form with the user’s default repetition count', function () {

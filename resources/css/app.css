@@ -2,13 +2,22 @@
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/blade-ui-kit/blade-heroicons/src/**/*.php';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+/*
+| The colour rule
+|--------------------------------------------------------------------------
+| Blue is the only colour in the interface: it marks what is active, what is
+| a primary action, and what carries data. Everything else is a neutral grey.
+| Red appears solely on destructive actions. Nothing else gets a hue.
+*/
 
-    /* The DoFit palette, carried over from the original Bootstrap theme. */
+@theme {
+    --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* The DoFit blue, carried over from the original theme. */
     --color-brand-50: #eff9fe;
     --color-brand-100: #daf1fc;
     --color-brand-200: #bde6fa;
@@ -21,17 +30,62 @@
     --color-brand-900: #0e466a;
     --color-brand-950: #092d46;
 
-    --color-success: #11d3bc;
-    --color-danger: #f67280;
-    --color-warning: #ff7e67;
+    /* Resolved from the tokens below, so one `dark` class flips everything. */
+    --color-canvas: var(--ui-canvas);
+    --color-raised: var(--ui-raised);
+    --color-line: var(--ui-line);
+    --color-ink: var(--ui-ink);
+    --color-ink-soft: var(--ui-ink-soft);
+    --color-ink-muted: var(--ui-ink-muted);
+    --color-accent: var(--ui-accent);
+    --color-accent-ink: var(--ui-accent-ink);
+    --color-accent-soft: var(--ui-accent-soft);
+    --color-danger: var(--ui-danger);
+}
+
+:root {
+    --ui-canvas: #ffffff;
+    --ui-raised: #f5f7fa;
+    --ui-line: #e7eaef;
+    --ui-ink: #101319;
+    --ui-ink-soft: #5b6270;
+    --ui-ink-muted: #98a0ae;
+    --ui-accent: #07689f;
+    --ui-accent-ink: #ffffff;
+    --ui-accent-soft: #eaf5fc;
+    --ui-danger: #d94055;
+}
+
+.dark {
+    --ui-canvas: #0f1216;
+    --ui-raised: #181c22;
+    --ui-line: #252b34;
+    --ui-ink: #f2f4f7;
+    --ui-ink-soft: #a4adbb;
+    --ui-ink-muted: #6d7684;
+    --ui-accent: #6bbde6;
+    --ui-accent-ink: #08161f;
+    --ui-accent-soft: #14293a;
+    --ui-danger: #f27183;
 }
 
 @layer base {
     html {
         -webkit-tap-highlight-color: transparent;
+        color-scheme: light;
+    }
+
+    html.dark {
+        color-scheme: dark;
     }
 
     [x-cloak] {
         display: none !important;
+    }
+
+    /* Weights and repetition counts line up column-wise across rows. */
+    .numeric {
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
     }
 }

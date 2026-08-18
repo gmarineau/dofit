@@ -15,7 +15,7 @@ it('lists only the signed-in user’s trainings, most recent first', function ()
     $someoneElses = Training::factory()->create();
 
     Livewire::actingAs($this->user)
-        ->test('pages::dashboard')
+        ->test('pages::trainings.index')
         ->assertSeeInOrder([$newer->name, $older->name])
         ->assertDontSee($someoneElses->name);
 });
@@ -47,7 +47,7 @@ it('deletes a training the user owns', function () {
     $training = Training::factory()->for($this->user)->create();
 
     Livewire::actingAs($this->user)
-        ->test('pages::dashboard')
+        ->test('pages::trainings.index')
         ->call('confirmDelete', $training->id)
         ->assertSet('deletingId', $training->id)
         ->call('delete')
@@ -60,7 +60,7 @@ it('cancels a pending training deletion', function () {
     $training = Training::factory()->for($this->user)->create();
 
     Livewire::actingAs($this->user)
-        ->test('pages::dashboard')
+        ->test('pages::trainings.index')
         ->call('confirmDelete', $training->id)
         ->call('cancelDelete')
         ->assertSet('deletingId', null);
@@ -72,7 +72,7 @@ it('refuses to delete a training belonging to someone else', function () {
     $someoneElses = Training::factory()->create();
 
     Livewire::actingAs($this->user)
-        ->test('pages::dashboard')
+        ->test('pages::trainings.index')
         ->call('confirmDelete', $someoneElses->id)
         ->call('delete')
         ->assertForbidden();
@@ -93,7 +93,7 @@ it('deletes the training’s activities along with it', function () {
     $activity = Activity::factory()->forTraining($training)->create();
 
     Livewire::actingAs($this->user)
-        ->test('pages::dashboard')
+        ->test('pages::trainings.index')
         ->call('confirmDelete', $training->id)
         ->call('delete');
 

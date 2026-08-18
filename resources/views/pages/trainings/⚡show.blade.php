@@ -22,11 +22,11 @@ new class extends Component
     }
 
     /**
-     * Show the training's name in the browser tab.
+     * Render the page, showing the training's name in the browser tab.
      */
-    public function title(): string
+    public function render()
     {
-        return (string) $this->training->name;
+        return $this->view()->title((string) $this->training->name);
     }
 
     /**
@@ -79,47 +79,57 @@ new class extends Component
 ?>
 
 <div>
-    <x-page-header :title="$training->name" :back="route('dashboard')">
+    <x-page-header
+        :title="$training->name"
+        :subtitle="$training->date->translatedFormat('l j F Y')"
+        :back="route('trainings.index')"
+    >
         <x-slot:actions>
-            <x-button :href="route('activities.create', $training)" as="a" size="icon" wire:navigate aria-label="{{ __('New activity') }}">
-                <x-icons.plus />
+            <x-button :href="route('activities.create', $training)" as="a" wire:navigate class="max-sm:hidden">
+                <x-heroicon-o-plus class="size-4" />
+                {{ __('New activity') }}
             </x-button>
         </x-slot:actions>
     </x-page-header>
 
-    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-        {{ $training->date->format(config('dofit.date_format')) }}
-    </p>
+    @if ($this->activities->isNotEmpty())
+        <ul>
+            @foreach ($this->activities as $activity)
+                <li wire:key="activity-{{ $activity->id }}" class="group flex items-center gap-3 border-b border-line last:border-0">
+                    <a href="{{ route('activities.show', $activity) }}" wire:navigate class="min-w-0 flex-1 py-4">
+                        <div class="truncate font-bold text-ink">{{ $activity->activityType->type }}</div>
+                        <div class="mt-0.5 text-sm font-semibold text-ink-soft">{{ $activity->sequences_formatted }}</div>
+                    </a>
 
-    <div class="mt-6">
-        @if ($this->activities->isEmpty())
-            <x-empty-state>{{ __('No activity in this training yet.') }}</x-empty-state>
-        @else
-            <x-card>
-                <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                    @foreach ($this->activities as $activity)
-                        <li wire:key="activity-{{ $activity->id }}" class="flex items-center gap-3 px-4 py-3">
-                            <a href="{{ route('activities.show', $activity) }}" wire:navigate class="min-w-0 flex-1">
-                                <span class="block truncate font-medium">{{ $activity->activityType->type }}</span>
-                                <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ $activity->sequences_formatted }}</span>
-                            </a>
+                    <x-heroicon-o-chevron-right class="size-4 shrink-0 text-ink-muted" />
 
-                            <x-button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                class="shrink-0 hover:text-danger"
-                                wire:click="confirmDelete({{ $activity->id }})"
-                                aria-label="{{ __('Delete activity') }}"
-                            >
-                                <x-icons.x class="size-4" />
-                            </x-button>
-                        </li>
-                    @endforeach
-                </ul>
-            </x-card>
-        @endif
-    </div>
+                    <x-button
+                            type="button"
+                            variant="quiet-danger"
+                            size="icon-sm"
+                            class="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
+                            wire:click="confirmDelete({{ $activity->id }})"
+                            aria-label="{{ __('Delete activity') }}"
+                        >
+                            <x-heroicon-o-x-mark class="size-4" />
+                        </x-button>
+                </li>
+            @endforeach
+        </ul>
+    @else
+        <x-empty-state icon="o-chart-bar">
+            {{ __('No activity in this training yet.') }}
+
+            <x-slot:action>
+                <x-button :href="route('activities.create', $training)" as="a" wire:navigate>
+                    <x-heroicon-o-plus class="size-4" />
+                    {{ __('New activity') }}
+                </x-button>
+            </x-slot:action>
+        </x-empty-state>
+    @endif
+
+    <x-fab :href="route('activities.create', $training)" wire:navigate :label="__('New activity')" />
 
     <x-confirm-delete
         :show="$deletingId !== null"

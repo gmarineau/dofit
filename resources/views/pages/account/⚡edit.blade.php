@@ -1,10 +1,9 @@
 <?php
 
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Edit account')] class extends Component
+new class extends Component
 {
     public string $name = '';
 
@@ -47,38 +46,42 @@ new #[Title('Edit account')] class extends Component
 
         $this->redirect(route('account'), navigate: true);
     }
+
+    /**
+     * Render the page with its translated title.
+     */
+    public function render()
+    {
+        return $this->view()->title(__('Edit account'));
+    }
 };
 ?>
 
 <div>
     <x-page-header :title="__('Edit account')" :back="route('account')" />
 
-    <div class="mt-6">
-        <x-form-card>
-            <form wire:submit="save">
-                <x-field :label="__('Name')" for="name" :error="$errors->first('name')">
-                    <x-input id="name" type="text" wire:model="name" :invalid="$errors->has('name')" autocomplete="name" autofocus />
-                </x-field>
+    <form wire:submit="save">
+        <x-field :label="__('Name')" for="name" :error="$errors->first('name')">
+            <x-input id="name" type="text" wire:model="name" :invalid="$errors->has('name')" autocomplete="name" autofocus />
+        </x-field>
 
-                <x-field :label="__('E-mail')" for="email" :error="$errors->first('email')">
-                    <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="email" />
-                </x-field>
+        <x-field :label="__('E-mail')" for="email" :error="$errors->first('email')">
+            <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="email" />
+        </x-field>
 
-                <x-field :label="__('Birthdate')" for="birthdate" :error="$errors->first('birthdate')">
-                    <x-input id="birthdate" type="date" wire:model="birthdate" :invalid="$errors->has('birthdate')" />
-                </x-field>
+        <x-field :label="__('Birthdate')" for="birthdate" :error="$errors->first('birthdate')">
+            <x-input id="birthdate" type="date" wire:model="birthdate" :invalid="$errors->has('birthdate')" />
+        </x-field>
 
-                <div class="flex items-center gap-3">
-                    <x-button type="submit">
-                        {{ __('Save') }}
-                        <x-icons.spinner wire:loading wire:target="save" />
-                    </x-button>
+        <div class="flex items-center gap-3 pt-2">
+            <x-button type="submit" class="flex-1 sm:flex-none">
+                {{ __('Save') }}
+                <x-heroicon-o-arrow-path class="size-4 animate-spin" wire:loading wire:target="save" />
+            </x-button>
 
-                    <a href="{{ route('account') }}" wire:navigate class="text-sm text-zinc-500 hover:underline dark:text-zinc-400">
-                        {{ __('Cancel') }}
-                    </a>
-                </div>
-            </form>
-        </x-form-card>
-    </div>
+            <x-button :href="route('account')" as="a" variant="ghost" wire:navigate>
+                {{ __('Cancel') }}
+            </x-button>
+        </div>
+    </form>
 </div>

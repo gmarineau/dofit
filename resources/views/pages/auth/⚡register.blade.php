@@ -6,10 +6,9 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('layouts::guest')] #[Title('Register')] class extends Component
+new #[Layout('layouts::guest')] class extends Component
 {
     public string $name = '';
 
@@ -51,40 +50,52 @@ new #[Layout('layouts::guest')] #[Title('Register')] class extends Component
 
         $this->redirect(route('dashboard'), navigate: true);
     }
+
+    /**
+     * Render the page with its translated title.
+     */
+    public function render()
+    {
+        return $this->view()->title(__('Register'));
+    }
 };
 ?>
 
 <div>
-    <x-form-card>
-        <h1 class="mb-1 text-lg font-semibold">{{ __('Create an account') }}</h1>
-        <p class="mb-6 text-sm text-zinc-500 dark:text-zinc-400">{{ __('Start logging your trainings.') }}</p>
+    <div class="mb-8 text-center">
+        <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-accent text-white dark:text-canvas">
+            <x-heroicon-o-bolt class="size-6" />
+        </div>
 
-        <form wire:submit="register">
-            <x-field :label="__('Name')" for="name" :error="$errors->first('name')">
-                <x-input id="name" type="text" wire:model="name" :invalid="$errors->has('name')" autocomplete="name" autofocus required />
-            </x-field>
+        <h1 class="text-xl font-semibold tracking-tight text-ink">{{ __('Create an account') }}</h1>
+        <p class="mt-1 text-sm text-ink-soft">{{ __('Start logging your trainings.') }}</p>
+    </div>
 
-            <x-field :label="__('E-mail')" for="email" :error="$errors->first('email')">
-                <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="username" required />
-            </x-field>
+    <form wire:submit="register">
+        <x-field :label="__('Name')" for="name" :error="$errors->first('name')">
+            <x-input id="name" type="text" wire:model="name" :invalid="$errors->has('name')" autocomplete="name" autofocus required />
+        </x-field>
 
-            <x-field :label="__('Password')" for="password" :error="$errors->first('password')">
-                <x-input id="password" type="password" wire:model="password" :invalid="$errors->has('password')" autocomplete="new-password" required />
-            </x-field>
+        <x-field :label="__('E-mail')" for="email" :error="$errors->first('email')">
+            <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="username" required />
+        </x-field>
 
-            <x-field :label="__('Confirm password')" for="password_confirmation" :error="$errors->first('password_confirmation')">
-                <x-input id="password_confirmation" type="password" wire:model="password_confirmation" autocomplete="new-password" required />
-            </x-field>
+        <x-field :label="__('Password')" for="password" :error="$errors->first('password')">
+            <x-input id="password" type="password" wire:model="password" :invalid="$errors->has('password')" autocomplete="new-password" required />
+        </x-field>
 
-            <x-button type="submit" class="w-full">
-                {{ __('Register') }}
-                <x-icons.spinner wire:loading wire:target="register" />
-            </x-button>
-        </form>
+        <x-field :label="__('Confirm password')" for="password_confirmation" :error="$errors->first('password_confirmation')">
+            <x-input id="password_confirmation" type="password" wire:model="password_confirmation" autocomplete="new-password" required />
+        </x-field>
 
-        <p class="mt-5 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            {{ __('Already registered?') }}
-            <a href="{{ route('login') }}" wire:navigate class="text-brand-700 hover:underline dark:text-brand-300">{{ __('Log in') }}</a>
-        </p>
-    </x-form-card>
+        <x-button type="submit" class="w-full">
+            {{ __('Register') }}
+            <x-heroicon-o-arrow-path class="size-4 animate-spin" wire:loading wire:target="register" />
+        </x-button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-ink-soft">
+        {{ __('Already registered?') }}
+        <a href="{{ route('login') }}" wire:navigate class="font-medium text-accent hover:underline">{{ __('Log in') }}</a>
+    </p>
 </div>

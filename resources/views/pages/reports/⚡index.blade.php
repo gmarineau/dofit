@@ -3,10 +3,9 @@
 use App\Services\MetricService;
 use App\Services\TrainingService;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Reports')] class extends Component
+new class extends Component
 {
     /**
      * The user's weight measurements over time.
@@ -29,29 +28,35 @@ new #[Title('Reports')] class extends Component
     {
         return app(TrainingService::class)->getSeries(auth()->user());
     }
+
+    /**
+     * Render the page with its translated title.
+     */
+    public function render()
+    {
+        return $this->view()->title(__('Reports'));
+    }
 };
 ?>
 
 <div>
     <x-page-header :title="__('Reports')" />
 
-    <div class="mt-6 space-y-6">
-        <x-card :header="__('Metrics')">
-            <div class="p-4">
-                <x-line-chart
-                    :labels="$this->metrics['labels']"
-                    :series="[['label' => __('Weight'), 'values' => $this->metrics['values']]]"
-                />
-            </div>
-        </x-card>
+    <section class="mb-10">
+        <x-section-heading>{{ __('Weight') }}</x-section-heading>
 
-        <x-card :header="__('Trainings')">
-            <div class="p-4">
-                <x-line-chart
-                    :labels="$this->trainings['labels']"
-                    :series="[['label' => __('Trainings'), 'values' => $this->trainings['values']]]"
-                />
-            </div>
-        </x-card>
-    </div>
+        <x-chart
+            :labels="$this->metrics['labels']"
+            :datasets="[['label' => __('Weight'), 'data' => $this->metrics['values']]]"
+        />
+    </section>
+
+    <section class="mb-10">
+        <x-section-heading>{{ __('Sessions per month') }}</x-section-heading>
+
+        <x-chart
+            :labels="$this->trainings['labels']"
+            :datasets="[['label' => __('Sessions'), 'data' => $this->trainings['values']]]"
+        />
+    </section>
 </div>

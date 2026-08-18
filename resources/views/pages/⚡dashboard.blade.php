@@ -1,108 +1,97 @@
 <?php
 
-use App\Models\Training;
+use App\Services\DashboardService;
+use App\Services\MetricService;
+use App\Services\TrainingService;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Trainings')] class extends Component
+new class extends Component
 {
-    public ?int $deletingId = null;
-
     /**
-     * The user's trainings, most recent first.
+     * The headline numbers for the current month.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, Training>
+     * @return array{trainings: int, sequences: int, volume: float, weight: float|null, weight_change: float|null}
      */
     #[Computed]
-    public function trainings()
+    public function summary(): array
     {
-        return auth()->user()->trainings()
-            ->withCount('activities')
-            ->orderByDesc('date')
-            ->get();
+        return app(DashboardService::class)->summary(auth()->user());
     }
 
     /**
-     * Ask the user to confirm deleting a training.
+     * How many trainings the user recorded per month.
+     *
+     * @return array{labels: list<string>, values: list<int>}
      */
-    public function confirmDelete(int $id): void
+    #[Computed]
+    public function sessions(): array
     {
-        $this->deletingId = $id;
+        return app(TrainingService::class)->getSeries(auth()->user());
     }
 
     /**
-     * Dismiss the delete confirmation.
+     * The user's weight measurements over time.
+     *
+     * @return array{labels: list<string>, values: list<float>}
      */
-    public function cancelDelete(): void
+    #[Computed]
+    public function weight(): array
     {
-        $this->deletingId = null;
+        return app(MetricService::class)->getSeries(auth()->user());
     }
 
     /**
-     * Delete the training the user confirmed.
+     * Render the page with its translated title.
      */
-    public function delete(): void
+    public function render()
     {
-        $training = Training::findOrFail($this->deletingId);
-
-        $this->authorize('delete', $training);
-
-        $training->delete();
-
-        $this->deletingId = null;
-
-        unset($this->trainings);
+        return $this->view()->title(__('Dashboard'));
     }
 };
 ?>
 
 <div>
-    <x-page-header :title="__('Trainings')">
-        <x-slot:actions>
-            <x-button :href="route('trainings.create')" as="a" size="icon" wire:navigate aria-label="{{ __('New training') }}">
-                <x-icons.plus />
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+    <x-page-header :title="__('Dashboard')" :subtitle="now()->translatedFormat('F Y')" />
 
-    <div class="mt-6">
-        @if ($this->trainings->isEmpty())
-            <x-empty-state>{{ __('No training recorded yet.') }}</x-empty-state>
-        @else
-            <x-card>
-                <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                    @foreach ($this->trainings as $training)
-                        <li wire:key="training-{{ $training->id }}" class="flex items-center gap-3 px-4 py-3">
-                            <a href="{{ route('trainings.show', $training) }}" wire:navigate class="min-w-0 flex-1">
-                                <span class="block truncate font-medium">{{ $training->name }}</span>
-                                <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ $training->activities_formatted }}</span>
-                            </a>
+    {{-- This month at a glance. --}}
+    <div class="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <x-stat :label="__('Sessions')" :value="$this->summary['trainings']" :caption="__('this month')" />
 
-                            <span class="shrink-0 text-sm text-zinc-500 dark:text-zinc-400">
-                                {{ $training->date->format(config('dofit.date_format')) }}
-                            </span>
+        <x-stat :label="__('Sets')" :value="$this->summary['sequences']" :caption="__('this month')" />
 
-                            <x-button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                class="shrink-0 hover:text-danger"
-                                wire:click="confirmDelete({{ $training->id }})"
-                                aria-label="{{ __('Delete training') }}"
-                            >
-                                <x-icons.x class="size-4" />
-                            </x-button>
-                        </li>
-                    @endforeach
-                </ul>
-            </x-card>
-        @endif
+        <x-stat
+            :label="__('Volume')"
+            :value="$this->summary['volume'] >= 1000 ? round($this->summary['volume'] / 1000, 1) : $this->summary['volume']"
+            :unit="$this->summary['volume'] >= 1000 ? __('t') : __('kg')"
+            :caption="__('this month')"
+        />
+
+        <x-stat
+            :label="__('Weight')"
+            :value="$this->summary['weight'] ?? '—'"
+            :unit="$this->summary['weight'] !== null ? __('kg') : null"
+            :caption="$this->summary['weight_change'] !== null
+                ? ($this->summary['weight_change'] > 0 ? '+' : '').$this->summary['weight_change'].' '.__('kg')
+                : null"
+        />
     </div>
 
-    <x-confirm-delete
-        :show="$deletingId !== null"
-        :title="__('Delete this training?')"
-        :message="__('Its activities and sequences will be deleted too.')"
-    />
+    <section class="mb-10">
+        <x-section-heading>{{ __('Sessions per month') }}</x-section-heading>
+
+        <x-chart
+            :labels="$this->sessions['labels']"
+            :datasets="[['label' => __('Sessions'), 'data' => $this->sessions['values']]]"
+        />
+    </section>
+
+    <section class="mb-10">
+        <x-section-heading>{{ __('Weight') }}</x-section-heading>
+
+        <x-chart
+            :labels="$this->weight['labels']"
+            :datasets="[['label' => __('Weight'), 'data' => $this->weight['values']]]"
+        />
+    </section>
 </div>
