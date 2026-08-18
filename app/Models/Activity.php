@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -48,7 +47,7 @@ class Activity extends Model
     {
         $count = $this->sequences_count ?? $this->sequences->count();
 
-        return $count.' '.Str::plural('sequence', $count);
+        return trans_choice(':count sequence|:count sequences', $count, ['count' => $count]);
     }
 
     /**

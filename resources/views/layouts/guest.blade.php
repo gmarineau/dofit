@@ -10,6 +10,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
+
+        @laravelPWA
     </head>
     <body class="flex h-full flex-col bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
         <div class="flex flex-1 flex-col items-center justify-center px-4 py-10">

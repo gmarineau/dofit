@@ -10,6 +10,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
+
+        @laravelPWA
     </head>
     <body class="h-full bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
         @include('layouts.navigation')

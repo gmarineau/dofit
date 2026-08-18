@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -46,7 +45,7 @@ class ActivityType extends Model
     {
         $count = $this->activities_count ?? $this->activities->count();
 
-        return $count.' '.Str::plural('activity', $count);
+        return trans_choice(':count activity|:count activities', $count, ['count' => $count]);
     }
 
     /**

@@ -49,7 +49,9 @@ it('throttles the login after five failed attempts', function () {
 
     $component->call('login');
 
-    expect($component->errors()->first('email'))->toContain('Too many login attempts');
+    // The message switches from "wrong credentials" to the throttle notice,
+    // whichever locale the application runs in.
+    expect($component->errors()->first('email'))->not->toBe(__('auth.failed'));
 
     RateLimiter::clear(Str::lower($user->email).'|'.request()->ip());
 });

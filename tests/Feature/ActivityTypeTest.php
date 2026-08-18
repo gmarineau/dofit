@@ -23,7 +23,7 @@ it('lists only the signed-in user’s activity types with their activity counts'
     Livewire::actingAs($this->user)
         ->test('pages::activity-types.index')
         ->assertSee('Bench Press')
-        ->assertSee('2 activities')
+        ->assertSee(trans_choice(':count activity|:count activities', 2, ['count' => 2]))
         ->assertDontSee($someoneElses->type);
 });
 
