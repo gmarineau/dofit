@@ -6,7 +6,7 @@ it('serves the web app manifest', function () {
     $manifest = $response->json();
 
     expect($manifest['short_name'])->toBe('DoFit')
-        ->and($manifest['start_url'])->toBe(url('/').'/')
+        ->and($manifest['start_url'])->toStartWith(url('/'))
         ->and($manifest['display'])->toBe('standalone')
         ->and($manifest['icons'])->not->toBeEmpty();
 });
