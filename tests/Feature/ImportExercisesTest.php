@@ -48,13 +48,24 @@ function upstreamExercises(): array
     ];
 }
 
+/**
+ * Stub the upstream host. Http::fake() merges stubs rather than replacing them,
+ * so each test declares the whole set it wants rather than layering.
+ */
+function fakeUpstream(?int $dataStatus = null, ?int $imageStatus = null): void
+{
+    Http::fake([
+        '*dist/exercises.json' => $dataStatus === null
+            ? Http::response(upstreamExercises(), 200)
+            : Http::response('nope', $dataStatus),
+        '*exercises/*' => $imageStatus === null
+            ? Http::response(jpegFixture(), 200)
+            : Http::response('nope', $imageStatus),
+    ]);
+}
+
 beforeEach(function () {
     Storage::fake('public');
-
-    Http::fake([
-        '*dist/exercises.json' => Http::response(upstreamExercises(), 200),
-        '*exercises/*' => Http::response(jpegFixture(), 200),
-    ]);
 });
 
 it('imports nothing until the command is run', function () {
@@ -62,6 +73,8 @@ it('imports nothing until the command is run', function () {
 });
 
 it('imports the library without illustrations by default', function () {
+    fakeUpstream();
+
     $this->artisan('dofit:import-exercises', ['--without-images' => true])->assertSuccessful();
 
     expect(Exercise::count())->toBe(2);
@@ -76,6 +89,8 @@ it('imports the library without illustrations by default', function () {
 });
 
 it('downloads the illustrations when asked', function () {
+    fakeUpstream();
+
     $this->artisan('dofit:import-exercises', ['--with-images' => true])->assertSuccessful();
 
     expect(Exercise::where('slug', 'barbell-bench-press')->firstOrFail()->getMedia(Exercise::ILLUSTRATIONS))
@@ -83,6 +98,8 @@ it('downloads the illustrations when asked', function () {
 });
 
 it('updates entries it already imported rather than duplicating them', function () {
+    fakeUpstream();
+
     $this->artisan('dofit:import-exercises', ['--without-images' => true])->assertSuccessful();
     $this->artisan('dofit:import-exercises', ['--without-images' => true])->assertSuccessful();
 
@@ -90,6 +107,8 @@ it('updates entries it already imported rather than duplicating them', function 
 });
 
 it('leaves already-fetched illustrations alone on a second run', function () {
+    fakeUpstream();
+
     $this->artisan('dofit:import-exercises', ['--with-images' => true])->assertSuccessful();
 
     $before = Http::recorded()->count();
@@ -101,6 +120,8 @@ it('leaves already-fetched illustrations alone on a second run', function () {
 });
 
 it('refetches illustrations when forced', function () {
+    fakeUpstream();
+
     $this->artisan('dofit:import-exercises', ['--with-images' => true])->assertSuccessful();
     $this->artisan('dofit:import-exercises', ['--with-images' => true, '--force' => true])->assertSuccessful();
 
@@ -109,13 +130,15 @@ it('refetches illustrations when forced', function () {
 });
 
 it('honours the limit', function () {
+    fakeUpstream();
+
     $this->artisan('dofit:import-exercises', ['--without-images' => true, '--limit' => 1])->assertSuccessful();
 
     expect(Exercise::count())->toBe(1);
 });
 
 it('fails when the dataset cannot be downloaded', function () {
-    Http::fake(['*dist/exercises.json' => Http::response('nope', 503)]);
+    fakeUpstream(dataStatus: 503);
 
     $this->artisan('dofit:import-exercises', ['--without-images' => true])->assertFailed();
 
@@ -123,10 +146,7 @@ it('fails when the dataset cannot be downloaded', function () {
 });
 
 it('reports illustrations it could not fetch', function () {
-    Http::fake([
-        '*dist/exercises.json' => Http::response(upstreamExercises(), 200),
-        '*exercises/*' => Http::response('nope', 404),
-    ]);
+    fakeUpstream(imageStatus: 404);
 
     $this->artisan('dofit:import-exercises', ['--with-images' => true])->assertFailed();
 
