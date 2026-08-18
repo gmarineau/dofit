@@ -1,0 +1,41 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Activity;
+use App\Models\ActivityType;
+use App\Models\Training;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<Activity>
+ */
+class ActivityFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'training_id' => Training::factory(),
+            'activity_type_id' => ActivityType::factory(),
+        ];
+    }
+
+    /**
+     * Attach the activity to a training, reusing an activity type owned by the
+     * same user so the activity stays consistent with its owner.
+     */
+    public function forTraining(Training $training): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'training_id' => $training->id,
+            'activity_type_id' => $training->user->activityTypes->isNotEmpty()
+                ? $training->user->activityTypes->random()->id
+                : ActivityType::factory()->for($training->user)->create()->id,
+        ]);
+    }
+}
