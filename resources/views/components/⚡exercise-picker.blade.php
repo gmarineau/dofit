@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Exercise;
+use App\Services\ExerciseService;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -18,6 +19,12 @@ new class extends Component
     public ?string $equipment = null;
 
     /**
+     * Which slice of the library is on screen: favourites, the exercises the
+     * user added, the imported ones, or everything.
+     */
+    public ?string $source = null;
+
+    /**
      * Matching entries from the shared library.
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, Exercise>
@@ -25,10 +32,7 @@ new class extends Component
     #[Computed]
     public function results()
     {
-        return Exercise::query()
-            ->search($this->term)
-            ->forMuscle($this->muscle)
-            ->withEquipment($this->equipment)
+        return $this->query()
             ->with('media')
             ->orderBy('name')
             ->limit(self::LIMIT)
@@ -41,37 +45,36 @@ new class extends Component
     #[Computed]
     public function total(): int
     {
-        return Exercise::query()
-            ->search($this->term)
+        return $this->query()->count();
+    }
+
+    /**
+     * The library narrowed by whatever the user is filtering on.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder<Exercise>
+     */
+    private function query()
+    {
+        $query = app(ExerciseService::class)
+            ->applyTerm(Exercise::query()->availableTo(auth()->user()), $this->term);
+
+        return $query
             ->forMuscle($this->muscle)
             ->withEquipment($this->equipment)
-            ->count();
+            ->when($this->source === 'favorites', fn ($query) => $query->favoritedBy(auth()->user()))
+            ->when($this->source === 'custom', fn ($query) => $query->custom())
+            ->when($this->source === 'imported', fn ($query) => $query->imported());
     }
 
     /**
-     * The muscles worth filtering on, most covered first.
-     *
-     * @return list<string>
+     * Narrow the list to one slice of the library, or drop the filter when the
+     * same one is tapped again.
      */
-    #[Computed]
-    public function muscles(): array
+    public function filterSource(string $source): void
     {
-        return [
-            'chest', 'shoulders', 'triceps', 'biceps', 'forearms', 'lats',
-            'middle back', 'lower back', 'traps', 'abdominals', 'quadriceps',
-            'hamstrings', 'glutes', 'calves',
-        ];
-    }
+        $this->source = $this->source === $source ? null : $source;
 
-    /**
-     * The equipment worth filtering on.
-     *
-     * @return list<string>
-     */
-    #[Computed]
-    public function equipments(): array
-    {
-        return ['barbell', 'dumbbell', 'machine', 'cable', 'kettlebells', 'body only', 'bands'];
+        unset($this->results, $this->total);
     }
 
     /**
@@ -130,7 +133,44 @@ new class extends Component
     </x-field>
 
     <div class="mb-3 -mt-2 flex flex-wrap gap-1.5">
-        @foreach ($this->muscles as $muscle)
+        <button
+            type="button"
+            wire:click="filterSource('favorites')"
+            @class([
+                'flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold transition',
+                'bg-accent text-accent-ink' => $source === 'favorites',
+                'bg-raised text-ink-soft hover:text-ink' => $source !== 'favorites',
+            ])
+        >
+            <x-heroicon-s-heart class="size-3.5" />
+            {{ __('Favorites') }}
+        </button>
+
+        <button
+            type="button"
+            wire:click="filterSource('custom')"
+            @class([
+                'rounded-full px-2.5 py-1 text-xs font-bold transition',
+                'bg-accent text-accent-ink' => $source === 'custom',
+                'bg-raised text-ink-soft hover:text-ink' => $source !== 'custom',
+            ])
+        >
+            {{ __('Custom') }}
+        </button>
+
+        <button
+            type="button"
+            wire:click="filterSource('imported')"
+            @class([
+                'rounded-full px-2.5 py-1 text-xs font-bold transition',
+                'bg-accent text-accent-ink' => $source === 'imported',
+                'bg-raised text-ink-soft hover:text-ink' => $source !== 'imported',
+            ])
+        >
+            {{ __('Imported') }}
+        </button>
+
+        @foreach (\App\Models\Exercise::MUSCLES as $muscle)
             <button
                 type="button"
                 wire:key="muscle-{{ $muscle }}"
@@ -147,7 +187,7 @@ new class extends Component
     </div>
 
     <div class="mb-5 flex flex-wrap gap-1.5">
-        @foreach ($this->equipments as $equipment)
+        @foreach (\App\Models\Exercise::EQUIPMENTS as $equipment)
             <button
                 type="button"
                 wire:key="equipment-{{ $equipment }}"

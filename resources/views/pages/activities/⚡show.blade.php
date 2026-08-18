@@ -18,7 +18,7 @@ new class extends Component
     {
         $this->authorize('view', $activity);
 
-        $this->activity = $activity->load('activityType', 'training');
+        $this->activity = $activity->load('exercise', 'training');
     }
 
     /**
@@ -26,7 +26,7 @@ new class extends Component
      */
     public function render()
     {
-        return $this->view()->title($this->activity->activityType->type);
+        return $this->view()->title($this->activity->exercise->name);
     }
 
     /**
@@ -76,23 +76,29 @@ new class extends Component
 
 <div>
     <x-page-header
-        :title="$activity->activityType->type"
+        :title="$activity->exercise->name"
         :subtitle="$activity->training->date->translatedFormat('j F Y')"
         :back="route('trainings.show', $activity->training)"
-    >
-        <x-slot:actions>
-            <x-button :href="route('sequences.create', $activity)" as="a" wire:navigate class="max-sm:hidden">
-                <x-heroicon-o-plus class="size-4" />
-                {{ __('New sequence') }}
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+    />
+
+    @if ($activity->isCompleted())
+        <div class="mb-5 flex items-center gap-3">
+            <x-badge>
+                <x-heroicon-s-check-circle class="size-3.5" />
+                {{ __('Done') }}
+            </x-badge>
+
+            <span class="text-sm font-semibold text-ink-muted">
+                {{ $activity->completed_at->translatedFormat('j F Y, H:i') }}
+            </span>
+        </div>
+    @endif
 
     @if ($this->sequences->isNotEmpty())
         <ul>
             @foreach ($this->sequences as $sequence)
                 {{-- The load is the point of the row, so it gets the size. --}}
-                <li wire:key="sequence-{{ $sequence->id }}" class="group flex items-center gap-4 border-b border-line py-4 last:border-0">
+                <li wire:key="sequence-{{ $sequence->id }}" class="flex items-center gap-4 border-b border-line py-4 last:border-0">
                     <span class="numeric w-6 shrink-0 text-sm font-bold text-ink-muted">{{ $loop->iteration }}</span>
 
                     <div class="flex min-w-0 flex-1 items-baseline gap-1.5">
@@ -110,15 +116,16 @@ new class extends Component
                             type="button"
                             variant="quiet-danger"
                             size="icon-sm"
-                            class="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
                             wire:click="confirmDelete({{ $sequence->id }})"
                             aria-label="{{ __('Delete sequence') }}"
                         >
-                            <x-heroicon-o-x-mark class="size-4" />
+                            <x-heroicon-o-trash class="size-4" />
                         </x-button>
                 </li>
             @endforeach
         </ul>
+
+        <x-add-row class="mt-4" :href="route('sequences.create', $activity)" wire:navigate :label="__('Add a set')" />
     @else
         <x-empty-state icon="o-bolt">
             {{ __('No sequence recorded yet.') }}
@@ -131,8 +138,6 @@ new class extends Component
             </x-slot:action>
         </x-empty-state>
     @endif
-
-    <x-fab :href="route('sequences.create', $activity)" wire:navigate :label="__('New sequence')" />
 
     <x-confirm-delete :show="$deletingId !== null" :title="__('Delete this sequence?')" />
 </div>

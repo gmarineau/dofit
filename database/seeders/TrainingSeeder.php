@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Activity;
+use App\Models\Exercise;
 use App\Models\Sequence;
 use App\Models\Training;
 use App\Models\User;
@@ -16,8 +17,10 @@ class TrainingSeeder extends Seeder
      */
     public function run(): void
     {
-        User::with('activityTypes')->each(function (User $user): void {
-            if ($user->activityTypes->isEmpty()) {
+        $exercises = Exercise::query()->inRandomOrder()->limit(6)->get();
+
+        User::each(function (User $user) use ($exercises): void {
+            if ($exercises->isEmpty()) {
                 return;
             }
 
@@ -25,15 +28,22 @@ class TrainingSeeder extends Seeder
                 ->count(30)
                 ->for($user)
                 ->create()
-                ->each(function (Training $training): void {
+                ->each(function (Training $training) use ($exercises): void {
                     Activity::factory()
                         ->count(4)
                         ->forTraining($training)
-                        ->create()
+                        // Four different exercises, as a real session would hold.
+                        ->sequence(...$exercises->shuffle()->take(4)
+                            ->map(fn (Exercise $exercise): array => ['exercise_id' => $exercise->id])
+                            ->all())
+                        ->create(['completed_at' => $training->date])
                         ->each(fn (Activity $activity) => Sequence::factory()
                             ->count(4)
                             ->for($activity)
                             ->create());
+
+                    // History is history: past sessions are closed.
+                    $training->update(['completed_at' => $training->date]);
                 });
         });
     }

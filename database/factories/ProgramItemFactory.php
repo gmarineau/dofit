@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\ActivityType;
+use App\Models\Exercise;
 use App\Models\Program;
 use App\Models\ProgramItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,11 +21,8 @@ class ProgramItemFactory extends Factory
     {
         return [
             'program_id' => Program::factory(),
-            'activity_type_id' => ActivityType::factory(),
+            'exercise_id' => Exercise::factory(),
             'position' => 0,
-            'target_sets' => fake()->numberBetween(3, 5),
-            'target_reps' => fake()->numberBetween(8, 12),
-            'target_weight' => fake()->randomFloat(1, 20, 80),
         ];
     }
 }

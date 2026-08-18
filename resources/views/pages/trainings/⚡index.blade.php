@@ -18,7 +18,10 @@ new class extends Component
     public function trainingsByMonth()
     {
         return auth()->user()->trainings()
-            ->withCount('activities')
+            ->withCount([
+                'activities',
+                'activities as completed_activities_count' => fn ($query) => $query->whereNotNull('completed_at'),
+            ])
             ->orderByDesc('date')
             ->get()
             ->groupBy(fn (Training $training): string => $training->date->translatedFormat('F Y'));
@@ -67,22 +70,19 @@ new class extends Component
 ?>
 
 <div>
-    <x-page-header :title="__('Trainings')">
-        <x-slot:actions>
-            <x-button :href="route('trainings.create')" as="a" wire:navigate class="max-sm:hidden">
-                <x-heroicon-o-plus class="size-4" />
-                {{ __('New training') }}
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+    <x-page-header :title="__('Trainings')" />
+
+    @if ($this->trainingsByMonth->isNotEmpty())
+        <x-add-row class="mb-8" :href="route('trainings.create')" wire:navigate :label="__('Add a training')" />
+    @endif
 
     @forelse ($this->trainingsByMonth as $month => $trainings)
         <section class="mb-8" wire:key="month-{{ $loop->index }}">
-            <x-section-heading>{{ $month }}</x-section-heading>
+            <x-section-heading icon="o-calendar-days">{{ $month }}</x-section-heading>
 
             <ul>
                 @foreach ($trainings as $training)
-                    <li wire:key="training-{{ $training->id }}" class="group flex items-center gap-4 border-b border-line last:border-0">
+                    <li wire:key="training-{{ $training->id }}" class="flex items-center gap-4 border-b border-line last:border-0">
                         {{-- The date rail carries the structure of the list. --}}
                         <div class="numeric w-10 shrink-0 text-center">
                             <div class="text-xl leading-none font-extrabold text-accent">{{ $training->date->format('d') }}</div>
@@ -91,18 +91,28 @@ new class extends Component
 
                         <a href="{{ route('trainings.show', $training) }}" wire:navigate class="min-w-0 flex-1 py-4">
                             <div class="truncate font-bold text-ink">{{ $training->name }}</div>
-                            <div class="mt-0.5 text-sm font-semibold text-ink-soft">{{ $training->activities_formatted }}</div>
+
+                            <div class="mt-0.5 flex items-center gap-2 text-sm font-semibold text-ink-soft">
+                                <span class="truncate">{{ $training->activities_formatted }}</span>
+
+                                {{-- An open session is the one the user is likely coming back to. --}}
+                                @if (! $training->isCompleted() && $training->activities_count > 0)
+                                    <x-badge class="numeric shrink-0">
+                                        <x-heroicon-s-play-circle class="size-3.5" />
+                                        {{ __('In progress') }} {{ $training->progress_formatted }}
+                                    </x-badge>
+                                @endif
+                            </div>
                         </a>
 
                         <x-button
                             type="button"
                             variant="quiet-danger"
                             size="icon-sm"
-                            class="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
                             wire:click="confirmDelete({{ $training->id }})"
                             aria-label="{{ __('Delete training') }}"
                         >
-                            <x-heroicon-o-x-mark class="size-4" />
+                            <x-heroicon-o-trash class="size-4" />
                         </x-button>
                     </li>
                 @endforeach

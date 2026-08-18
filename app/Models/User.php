@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -27,7 +28,8 @@ use Illuminate\Support\Str;
  * @property Carbon|null $updated_at
  * @property-read string $birthdate_formatted
  * @property-read Collection<int, Training> $trainings
- * @property-read Collection<int, ActivityType> $activityTypes
+ * @property-read Collection<int, Exercise> $exercises
+ * @property-read Collection<int, Exercise> $favoriteExercises
  * @property-read Collection<int, Metric> $metrics
  * @property-read Collection<int, Setting> $settings
  */
@@ -91,11 +93,24 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasMany<ActivityType, $this>
+     * The exercises the user added themselves, on top of the shared library.
+     *
+     * @return HasMany<Exercise, $this>
      */
-    public function activityTypes(): HasMany
+    public function exercises(): HasMany
     {
-        return $this->hasMany(ActivityType::class);
+        return $this->hasMany(Exercise::class);
+    }
+
+    /**
+     * The library exercises the user pinned, so the ones they actually train
+     * are one tap away.
+     *
+     * @return BelongsToMany<Exercise, $this>
+     */
+    public function favoriteExercises(): BelongsToMany
+    {
+        return $this->belongsToMany(Exercise::class)->withTimestamps();
     }
 
     /**

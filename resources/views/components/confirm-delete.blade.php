@@ -16,7 +16,7 @@
         x-on:click.self="$wire.{{ $cancel }}()"
     >
         {{-- A bottom sheet on phones, a centred dialog from sm up. --}}
-        <div class="w-full rounded-t-3xl bg-canvas p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-2xl sm:pb-6">
+        <div class="w-full rounded-t-3xl bg-surface p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-2xl sm:pb-6">
             <div class="mx-auto mb-5 h-1 w-10 rounded-full bg-line sm:hidden"></div>
 
             <h2 id="confirm-delete-title" class="text-lg font-extrabold text-ink">

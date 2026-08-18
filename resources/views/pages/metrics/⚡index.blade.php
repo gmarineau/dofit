@@ -64,19 +64,14 @@ new class extends Component
 ?>
 
 <div>
-    <x-page-header :title="__('Metrics')">
-        <x-slot:actions>
-            <x-button :href="route('metrics.create')" as="a" wire:navigate class="max-sm:hidden">
-                <x-heroicon-o-plus class="size-4" />
-                {{ __('New metric') }}
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+    <x-page-header :title="__('Metrics')" />
 
     @if ($this->metrics->isNotEmpty())
+        <x-add-row class="mb-6" :href="route('metrics.create')" wire:navigate :label="__('Add a metric')" />
+
         <ul>
             @foreach ($this->metrics as $metric)
-                <li wire:key="metric-{{ $metric->id }}" class="group flex items-center gap-4 border-b border-line py-4 last:border-0">
+                <li wire:key="metric-{{ $metric->id }}" class="flex items-center gap-4 border-b border-line py-4 last:border-0">
                     <div class="flex min-w-0 flex-1 items-baseline gap-1.5">
                         <span class="numeric text-2xl leading-none font-extrabold text-ink">{{ $metric->value_formatted }}</span>
                         <span class="text-sm font-semibold text-ink-muted">{{ __('kg') }}</span>
@@ -90,11 +85,10 @@ new class extends Component
                             type="button"
                             variant="quiet-danger"
                             size="icon-sm"
-                            class="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
                             wire:click="confirmDelete({{ $metric->id }})"
                             aria-label="{{ __('Delete metric') }}"
                         >
-                            <x-heroicon-o-x-mark class="size-4" />
+                            <x-heroicon-o-trash class="size-4" />
                         </x-button>
                 </li>
             @endforeach

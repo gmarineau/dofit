@@ -56,11 +56,12 @@ new class extends Component
 
     {{-- This month at a glance. --}}
     <div class="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <x-stat :label="__('Sessions')" :value="$this->summary['trainings']" :caption="__('this month')" />
+        <x-stat icon="o-bolt" :label="__('Sessions')" :value="$this->summary['trainings']" :caption="__('this month')" />
 
-        <x-stat :label="__('Sets')" :value="$this->summary['sequences']" :caption="__('this month')" />
+        <x-stat icon="o-queue-list" :label="__('Sets')" :value="$this->summary['sequences']" :caption="__('this month')" />
 
         <x-stat
+            icon="o-chart-bar"
             :label="__('Volume')"
             :value="$this->summary['volume'] >= 1000 ? round($this->summary['volume'] / 1000, 1) : $this->summary['volume']"
             :unit="$this->summary['volume'] >= 1000 ? __('t') : __('kg')"
@@ -68,6 +69,7 @@ new class extends Component
         />
 
         <x-stat
+            icon="o-scale"
             :label="__('Weight')"
             :value="$this->summary['weight'] ?? '—'"
             :unit="$this->summary['weight'] !== null ? __('kg') : null"
@@ -78,7 +80,7 @@ new class extends Component
     </div>
 
     <section class="mb-10">
-        <x-section-heading>{{ __('Sessions per month') }}</x-section-heading>
+        <x-section-heading icon="o-chart-bar">{{ __('Sessions per month') }}</x-section-heading>
 
         <x-chart
             :labels="$this->sessions['labels']"
@@ -87,7 +89,7 @@ new class extends Component
     </section>
 
     <section class="mb-10">
-        <x-section-heading>{{ __('Weight') }}</x-section-heading>
+        <x-section-heading icon="o-scale">{{ __('Weight') }}</x-section-heading>
 
         <x-chart
             :labels="$this->weight['labels']"

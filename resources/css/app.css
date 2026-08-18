@@ -32,6 +32,7 @@
 
     /* Resolved from the tokens below, so one `dark` class flips everything. */
     --color-canvas: var(--ui-canvas);
+    --color-surface: var(--ui-surface);
     --color-raised: var(--ui-raised);
     --color-line: var(--ui-line);
     --color-ink: var(--ui-ink);
@@ -41,24 +42,28 @@
     --color-accent-ink: var(--ui-accent-ink);
     --color-accent-soft: var(--ui-accent-soft);
     --color-danger: var(--ui-danger);
+    --color-danger-soft: var(--ui-danger-soft);
 }
 
 :root {
-    --ui-canvas: #ffffff;
-    --ui-raised: #f5f7fa;
-    --ui-line: #e7eaef;
+    --ui-canvas: #e9f1fd;
+    --ui-surface: #ffffff;
+    --ui-raised: #eef3fa;
+    --ui-line: #dde6f3;
     --ui-ink: #101319;
     --ui-ink-soft: #5b6270;
     --ui-ink-muted: #98a0ae;
     --ui-accent: #07689f;
     --ui-accent-ink: #ffffff;
-    --ui-accent-soft: #eaf5fc;
+    --ui-accent-soft: #d9eaf8;
     --ui-danger: #d94055;
+    --ui-danger-soft: #fdecef;
 }
 
 .dark {
     --ui-canvas: #0f1216;
-    --ui-raised: #181c22;
+    --ui-surface: #161a20;
+    --ui-raised: #1f242c;
     --ui-line: #252b34;
     --ui-ink: #f2f4f7;
     --ui-ink-soft: #a4adbb;
@@ -67,6 +72,7 @@
     --ui-accent-ink: #08161f;
     --ui-accent-soft: #14293a;
     --ui-danger: #f27183;
+    --ui-danger-soft: #3a1b21;
 }
 
 @layer base {

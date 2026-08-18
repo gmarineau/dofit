@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\ActivityType;
+use App\Models\Exercise;
 use App\Models\Program;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -15,22 +15,34 @@ class ProgramSeeder extends Seeder
      */
     public function run(): void
     {
-        User::with('activityTypes')->each(function (User $user): void {
-            if ($user->activityTypes->isEmpty() || $user->programs()->exists()) {
+        $exercises = Exercise::query()->orderBy('id')->limit(3)->get();
+
+        User::each(function (User $user) use ($exercises): void {
+            if ($exercises->isEmpty() || $user->programs()->exists()) {
                 return;
             }
 
             $program = $user->programs()->create(['name' => 'Haut du corps']);
 
-            $user->activityTypes
-                ->take(3)
+            $exercises
                 ->values()
-                ->each(fn (ActivityType $activityType, int $position) => $program->items()->create([
-                    'activity_type_id' => $activityType->id,
-                    'position' => $position,
-                    'target_sets' => 4,
-                    'target_reps' => 10,
-                ]));
+                ->each(function (Exercise $exercise, int $position) use ($program): void {
+                    $item = $program->items()->create([
+                        'exercise_id' => $exercise->id,
+                        'position' => $position,
+                    ]);
+
+                    // Two blocks: a couple of sets to warm into the load, then
+                    // the same reps a notch heavier.
+                    foreach ([[0, 60.0], [1, 70.0]] as [$blockPosition, $weight]) {
+                        $item->targets()->create([
+                            'position' => $blockPosition,
+                            'sets' => 2,
+                            'repetition' => 10,
+                            'weight' => $weight,
+                        ]);
+                    }
+                });
         });
     }
 }

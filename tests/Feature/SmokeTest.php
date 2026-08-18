@@ -30,7 +30,8 @@ it('renders every authenticated page', function (string $route) {
     '/programs/create',
     '/metrics',
     '/metrics/create',
-    '/activity-types',
+    '/exercises',
+    '/exercises/create',
     '/account',
     '/account/edit',
 ]);
@@ -39,7 +40,6 @@ it('renders every page that takes a model', function () {
     $this->actingAs($this->user);
 
     $this->get(route('trainings.show', $this->training))->assertOk();
-    $this->get(route('activities.create', $this->training))->assertOk();
     $this->get(route('activities.show', $this->activity))->assertOk();
     $this->get(route('sequences.create', $this->activity))->assertOk();
     $this->get(route('settings.edit', Setting::where('user_id', $this->user->id)->first()))->assertOk();

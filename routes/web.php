@@ -26,7 +26,6 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('activities')->name('activities.')->group(function () {
-        Route::livewire('{training}/create', 'pages::activities.create')->name('create');
         Route::livewire('{activity}', 'pages::activities.show')->name('show');
     });
 
@@ -34,13 +33,15 @@ Route::middleware('auth')->group(function () {
         Route::livewire('{activity}/create', 'pages::sequences.create')->name('create');
     });
 
+    Route::prefix('exercises')->name('exercises.')->group(function () {
+        Route::livewire('/', 'pages::exercises.index')->name('index');
+        Route::livewire('create', 'pages::exercises.create')->name('create');
+        Route::livewire('{exercise}', 'pages::exercises.show')->name('show');
+    });
+
     Route::prefix('metrics')->name('metrics.')->group(function () {
         Route::livewire('/', 'pages::metrics.index')->name('index');
         Route::livewire('create', 'pages::metrics.create')->name('create');
-    });
-
-    Route::prefix('activity-types')->name('activity-types.')->group(function () {
-        Route::livewire('/', 'pages::activity-types.index')->name('index');
     });
 
     Route::prefix('account')->group(function () {

@@ -19,7 +19,9 @@
         @include('layouts.navigation')
 
         <main class="mx-auto w-full max-w-2xl px-4 pt-4 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:pb-10">
-            {{ $slot }}
+            <div class="rounded-3xl border border-line bg-surface p-5 sm:p-8">
+                {{ $slot }}
+            </div>
         </main>
 
         @livewireScripts

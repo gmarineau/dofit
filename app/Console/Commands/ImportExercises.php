@@ -68,6 +68,9 @@ class ImportExercises extends Command
 
         $this->components->info("{$exercises->count()} exercises imported.");
 
+        // The import upserts in bulk, so Scout's model events never fire.
+        $this->components->warn('Run `dofit:sync-exercise-search` to refresh the search index.');
+
         if (! $this->shouldFetchImages()) {
             $this->components->info('Illustrations skipped. Run this command again with --with-images to add them.');
 

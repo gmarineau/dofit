@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('exercises', function (Blueprint $table) {
             $table->id();
+            // Null for the shared library, set for an exercise the user added.
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('slug')->unique();
             $table->string('name');
             $table->string('category')->nullable();
@@ -28,6 +30,7 @@ return new class extends Migration
             $table->json('image_paths')->nullable();
 
             $table->index('name');
+            $table->index(['user_id', 'name']);
             $table->index(['category', 'equipment']);
         });
     }

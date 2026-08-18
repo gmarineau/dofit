@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Activity;
-use App\Models\ActivityType;
+use App\Models\Exercise;
 use App\Models\Sequence;
 use App\Models\Training;
 use App\Models\User;
@@ -18,38 +18,55 @@ it('lists the activities of a training, most recent first', function () {
 
     Livewire::actingAs($this->user)
         ->test('pages::trainings.show', ['training' => $this->training])
-        ->assertSeeInOrder([$second->activityType->type, $first->activityType->type]);
+        ->assertSeeInOrder([$second->exercise->name, $first->exercise->name]);
 });
 
-it('creates an activity and reuses an existing activity type', function () {
-    $existing = ActivityType::factory()->for($this->user)->create(['type' => 'Bench Press']);
+it('creates an activity on an exercise that already exists', function () {
+    $existing = Exercise::factory()->create(['name' => 'Bench Press']);
 
     Livewire::actingAs($this->user)
-        ->test('pages::activities.create', ['training' => $this->training])
-        ->set('type', 'Bench Press')
-        ->call('save')
-        ->assertHasNoErrors();
+        ->test('pages::trainings.show', ['training' => $this->training])
+        ->call('addActivity', null, 'Bench Press');
 
-    expect($this->user->activityTypes()->count())->toBe(1)
-        ->and(Activity::firstOrFail()->activity_type_id)->toBe($existing->id);
+    // The library entry answers for the name; nothing is duplicated.
+    expect($this->user->exercises()->count())->toBe(0)
+        ->and(Activity::firstOrFail()->exercise_id)->toBe($existing->id);
 });
 
-it('creates the activity type the first time a name is used', function () {
+it('adds the exercise to the user’s own the first time a name is used', function () {
     Livewire::actingAs($this->user)
-        ->test('pages::activities.create', ['training' => $this->training])
-        ->set('type', 'Deadlift')
-        ->call('save')
-        ->assertHasNoErrors();
+        ->test('pages::trainings.show', ['training' => $this->training])
+        ->call('addActivity', null, 'Deadlift');
 
-    expect($this->user->activityTypes()->where('type', 'Deadlift')->exists())->toBeTrue();
+    expect($this->user->exercises()->where('name', 'Deadlift')->exists())->toBeTrue();
 });
 
-it('requires a type to create an activity', function () {
+it('opens and closes the exercise search over the session', function () {
     Livewire::actingAs($this->user)
-        ->test('pages::activities.create', ['training' => $this->training])
-        ->set('type', '')
-        ->call('save')
-        ->assertHasErrors(['type' => 'required']);
+        ->test('pages::trainings.show', ['training' => $this->training])
+        ->assertSet('picking', false)
+        ->call('pick')
+        ->assertSet('picking', true)
+        ->call('closeModal')
+        ->assertSet('picking', false);
+});
+
+it('closes the search once an exercise has been added', function () {
+    Livewire::actingAs($this->user)
+        ->test('pages::trainings.show', ['training' => $this->training])
+        ->call('pick')
+        ->call('addActivity', null, 'Deadlift')
+        ->assertSet('picking', false);
+
+    expect($this->training->activities()->count())->toBe(1);
+});
+
+it('refuses to add an exercise to someone else’s session', function () {
+    $someoneElses = Training::factory()->create();
+
+    Livewire::actingAs($this->user)
+        ->test('pages::trainings.show', ['training' => $someoneElses])
+        ->assertForbidden();
 });
 
 it('deletes an activity the user owns, along with its sequences', function () {
@@ -84,8 +101,27 @@ it('refuses to show an activity belonging to someone else', function () {
         ->assertForbidden();
 });
 
-it('refuses to add an activity to someone else’s training', function () {
-    $this->actingAs($this->user)
-        ->get(route('activities.create', Training::factory()->create()))
+it('ticks an activity off from the training page and puts it back', function () {
+    $activity = Activity::factory()->forTraining($this->training)->create();
+
+    $component = Livewire::actingAs($this->user)
+        ->test('pages::trainings.show', ['training' => $this->training])
+        ->call('toggle', $activity->id);
+
+    expect($activity->fresh()->isCompleted())->toBeTrue();
+
+    $component->call('toggle', $activity->id);
+
+    expect($activity->fresh()->isCompleted())->toBeFalse();
+});
+
+it('refuses to tick off an activity belonging to someone else', function () {
+    $someoneElses = Activity::factory()->forTraining(Training::factory()->create())->create();
+
+    Livewire::actingAs($this->user)
+        ->test('pages::trainings.show', ['training' => $this->training])
+        ->call('toggle', $someoneElses->id)
         ->assertForbidden();
+
+    expect($someoneElses->fresh()->isCompleted())->toBeFalse();
 });

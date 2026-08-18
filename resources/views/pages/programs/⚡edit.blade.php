@@ -2,7 +2,8 @@
 
 use App\Models\Program;
 use App\Models\ProgramItem;
-use App\Services\ActivityTypeService;
+use App\Models\ProgramTarget;
+use App\Services\ExerciseService;
 use App\Services\ProgramService;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -16,11 +17,6 @@ new class extends Component
     #[Validate('required|string|max:255')]
     public string $name = '';
 
-    #[Validate('required|string|max:255')]
-    public string $type = '';
-
-    public ?int $exerciseId = null;
-
     #[Validate('nullable|integer|min:1|max:255')]
     public ?int $targetSets = null;
 
@@ -29,6 +25,16 @@ new class extends Component
 
     #[Validate('nullable|numeric|min:0')]
     public ?float $targetWeight = null;
+
+    /**
+     * The exercise a block of sets is being added to, if any.
+     */
+    public ?int $targetItemId = null;
+
+    /**
+     * Whether the exercise search is open.
+     */
+    public bool $picking = false;
 
     /**
      * Load the program the route points at.
@@ -49,28 +55,18 @@ new class extends Component
     #[Computed]
     public function items()
     {
-        return $this->program->items()->with('activityType')->get();
+        return $this->program->items()->with('exercise', 'targets')->get();
     }
 
     /**
-     * The activity types already used by this user, offered as suggestions.
+     * The exercises this user already logged, offered before the search.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\ActivityType>
+     * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\Exercise>
      */
     #[Computed]
-    public function activityTypes()
+    public function suggestions()
     {
-        return app(ActivityTypeService::class)->getUserActivityTypes(auth()->user());
-    }
-
-    /**
-     * Record the exercise the picker handed over, ready to be given targets.
-     */
-    #[On('exercise-chosen')]
-    public function chooseExercise(?int $id, string $name): void
-    {
-        $this->exerciseId = $id;
-        $this->type = $name;
+        return app(ExerciseService::class)->logged(auth()->user());
     }
 
     /**
@@ -84,31 +80,40 @@ new class extends Component
     }
 
     /**
-     * Append an exercise to the program.
+     * Open the exercise search over the program.
      */
-    public function addItem(): void
+    public function pick(): void
     {
-        $this->validate([
-            'type' => ['required', 'string', 'max:255'],
-            'targetSets' => ['nullable', 'integer', 'min:1', 'max:255'],
-            'targetReps' => ['nullable', 'integer', 'min:1', 'max:255'],
-            'targetWeight' => ['nullable', 'numeric', 'min:0'],
-        ]);
+        $this->picking = true;
+    }
 
-        $activityType = app(ActivityTypeService::class)
-            ->getActivityType(auth()->user(), $this->type, $this->exerciseId);
+    /**
+     * Close the exercise search without adding anything.
+     */
+    public function closeModal(): void
+    {
+        $this->picking = false;
+    }
 
-        $this->program->items()->create([
-            'activity_type_id' => $activityType->id,
+    /**
+     * Append the chosen exercise, then open its sets form straight away: an
+     * exercise without a target is rarely what the user meant to stop at.
+     */
+    #[On('exercise-chosen')]
+    public function addItem(?int $id, string $name): void
+    {
+        $exercise = app(ExerciseService::class)->resolve(auth()->user(), $id, $name);
+
+        $item = $this->program->items()->create([
+            'exercise_id' => $exercise->id,
             'position' => (int) $this->program->items()->max('position') + 1,
-            'target_sets' => $this->targetSets,
-            'target_reps' => $this->targetReps,
-            'target_weight' => $this->targetWeight,
         ]);
 
-        $this->reset('type', 'exerciseId', 'targetWeight');
+        $this->picking = false;
 
-        unset($this->items, $this->activityTypes);
+        $this->startTarget($item->id);
+
+        unset($this->items, $this->suggestions);
     }
 
     /**
@@ -119,6 +124,69 @@ new class extends Component
         $item = $this->program->items()->findOrFail($id);
 
         $item->delete();
+
+        if ($this->targetItemId === $id) {
+            $this->cancelTarget();
+        }
+
+        unset($this->items);
+    }
+
+    /**
+     * Open the form that adds a block of sets to an exercise.
+     */
+    public function startTarget(int $id): void
+    {
+        $this->targetItemId = $this->program->items()->findOrFail($id)->id;
+
+        $this->resetValidation();
+    }
+
+    /**
+     * Close the block form without adding anything.
+     */
+    public function cancelTarget(): void
+    {
+        $this->reset('targetItemId', 'targetWeight');
+
+        $this->resetValidation();
+    }
+
+    /**
+     * Add another block of sets to an exercise, so it can ask for two sets at
+     * 60 kg and two more at 70 kg. The form stays open for the next block.
+     */
+    public function addTarget(): void
+    {
+        $this->validate([
+            'targetSets' => ['nullable', 'integer', 'min:1', 'max:255'],
+            'targetReps' => ['nullable', 'integer', 'min:1', 'max:255'],
+            'targetWeight' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $item = $this->program->items()->findOrFail($this->targetItemId);
+
+        $item->targets()->create([
+            'position' => (int) $item->targets()->max('position') + 1,
+            'sets' => $this->targetSets ?? 1,
+            'repetition' => $this->targetReps,
+            'weight' => $this->targetWeight,
+        ]);
+
+        $this->reset('targetWeight');
+
+        unset($this->items);
+    }
+
+    /**
+     * Remove one block of sets from an exercise.
+     */
+    public function removeTarget(int $id): void
+    {
+        ProgramTarget::query()
+            ->whereIn('program_item_id', $this->program->items()->select('id'))
+            ->findOrFail($id)
+            ->delete();
 
         unset($this->items);
     }
@@ -184,32 +252,73 @@ new class extends Component
         </x-slot:actions>
     </x-page-header>
 
-    <section class="mb-10">
-        <x-section-heading>{{ __('Name') }}</x-section-heading>
+    <section class="mb-8">
+        <x-section-heading icon="o-pencil-square">{{ __('Name') }}</x-section-heading>
 
-        <div class="flex items-start gap-3">
-            <x-input wire:model="name" wire:blur="rename" :invalid="$errors->has('name')" class="flex-1" />
-        </div>
+        <x-input wire:model="name" wire:blur="rename" :invalid="$errors->has('name')" />
 
         <x-error :messages="$errors->first('name')" />
     </section>
 
-    <section class="mb-10">
-        <x-section-heading>{{ __('Exercises') }}</x-section-heading>
+    <section>
+        <x-section-heading icon="o-rectangle-stack">{{ __('Exercises') }}</x-section-heading>
 
         @forelse ($this->items as $item)
             @if ($loop->first)
                 <ul>
             @endif
 
-            <li wire:key="item-{{ $item->id }}" class="flex items-center gap-3 border-b border-line py-3 last:border-0">
-                <span class="numeric w-6 shrink-0 text-sm font-bold text-ink-muted">{{ $loop->iteration }}</span>
+            <li wire:key="item-{{ $item->id }}" class="flex items-start gap-3 border-b border-line py-3 last:border-0">
+                <span class="numeric mt-1 w-6 shrink-0 text-sm font-bold text-ink-muted">{{ $loop->iteration }}</span>
 
-                <div class="min-w-0 flex-1">
-                    <div class="truncate font-bold text-ink">{{ $item->activityType->type }}</div>
+                <div class="flex min-w-0 flex-1 flex-col items-start">
+                    <div class="max-w-full truncate font-bold text-ink">{{ $item->exercise->name }}</div>
 
-                    @if ($item->target_formatted !== '')
-                        <div class="numeric mt-0.5 text-sm font-semibold text-ink-soft">{{ $item->target_formatted }}</div>
+                    {{-- One line per block of sets, so 2 × 10 @ 60 and 2 × 10 @ 70 stay separable. --}}
+                    @foreach ($item->targets as $target)
+                        <div wire:key="target-{{ $target->id }}" class="mt-1 flex items-center gap-2">
+                            <span class="numeric text-sm font-semibold text-ink-soft">{{ $target->label }}</span>
+
+                            <x-button
+                                type="button"
+                                variant="quiet-danger"
+                                size="icon-sm"
+                                class="size-6"
+                                wire:click="removeTarget({{ $target->id }})"
+                                aria-label="{{ __('Remove sets') }}"
+                            >
+                                <x-heroicon-o-trash class="size-3" />
+                            </x-button>
+                        </div>
+                    @endforeach
+
+                    @if ($targetItemId === $item->id)
+                        <form wire:submit="addTarget" class="mt-3">
+                            <div class="flex items-end gap-2">
+                                <x-input type="number" inputmode="numeric" wire:model="targetSets" :placeholder="__('Sets')" class="numeric w-20" />
+                                <x-input type="number" inputmode="numeric" wire:model="targetReps" :placeholder="__('Reps')" class="numeric w-20" />
+                                <x-input type="number" step="0.1" inputmode="decimal" wire:model="targetWeight" :placeholder="__('Weight')" class="numeric w-24" />
+
+                                <x-button type="submit" size="icon-sm" aria-label="{{ __('Add sets') }}">
+                                    <x-heroicon-o-plus class="size-4" />
+                                </x-button>
+
+                                <x-button type="button" variant="ghost" size="icon-sm" wire:click="cancelTarget" aria-label="{{ __('Close') }}">
+                                    <x-heroicon-o-x-mark class="size-4" />
+                                </x-button>
+                            </div>
+
+                            <x-error :messages="$errors->first('targetSets') ?: ($errors->first('targetReps') ?: $errors->first('targetWeight'))" />
+                        </form>
+                    @else
+                        <x-add-row
+                            as="button"
+                            type="button"
+                            size="sm"
+                            class="mt-2 self-start"
+                            wire:click="startTarget({{ $item->id }})"
+                            :label="__('Add sets')"
+                        />
                     @endif
                 </div>
 
@@ -243,7 +352,7 @@ new class extends Component
                         wire:click="removeItem({{ $item->id }})"
                         aria-label="{{ __('Remove exercise') }}"
                     >
-                        <x-heroicon-o-x-mark class="size-4" />
+                        <x-heroicon-o-trash class="size-4" />
                     </x-button>
                 </div>
             </li>
@@ -252,61 +361,30 @@ new class extends Component
                 </ul>
             @endif
         @empty
-            <p class="py-6 text-sm font-semibold text-ink-muted">{{ __('No exercise in this program yet.') }}</p>
+            <p class="py-4 text-sm font-semibold text-ink-muted">{{ __('No exercise in this program yet.') }}</p>
         @endforelse
+
+        <x-add-row class="mt-4 w-full" as="button" type="button" wire:click="pick" :label="__('Add an exercise')" />
     </section>
 
-    <section>
-        <x-section-heading>{{ __('Add an exercise') }}</x-section-heading>
+    <x-modal :show="$picking" :title="__('Add an exercise')">
+        @if ($this->suggestions->isNotEmpty())
+            <x-section-heading icon="o-fire">{{ __('Your most used') }}</x-section-heading>
 
-        @if ($type === '')
-            @if ($this->activityTypes->isNotEmpty())
-                <div class="mb-5 flex flex-wrap gap-2">
-                    @foreach ($this->activityTypes as $activityType)
-                        <button
-                            type="button"
-                            wire:key="suggestion-{{ $activityType->id }}"
-                            wire:click="chooseExercise(null, @js($activityType->type))"
-                            class="rounded-full bg-raised px-3 py-1.5 text-xs font-bold text-ink-soft transition hover:bg-accent-soft hover:text-accent"
-                        >
-                            {{ $activityType->type }}
-                        </button>
-                    @endforeach
-                </div>
-            @endif
-
-            <livewire:exercise-picker />
-        @else
-            <form wire:submit="addItem">
-                <div class="mb-5 flex items-center gap-3 rounded-xl bg-raised px-4 py-3">
-                    <span class="min-w-0 flex-1 truncate font-bold text-ink">{{ $type }}</span>
-
-                    <x-button type="button" variant="ghost" size="icon-sm" wire:click="$set('type', '')" aria-label="{{ __('Change exercise') }}">
-                        <x-heroicon-o-x-mark class="size-4" />
-                    </x-button>
-                </div>
-
-                <x-error :messages="$errors->first('type')" class="mb-4" />
-
-            <div class="grid grid-cols-3 gap-3">
-                <x-field :label="__('Sets')" for="targetSets" :error="$errors->first('targetSets')">
-                    <x-input id="targetSets" type="number" inputmode="numeric" wire:model="targetSets" :invalid="$errors->has('targetSets')" class="numeric" />
-                </x-field>
-
-                <x-field :label="__('Reps')" for="targetReps" :error="$errors->first('targetReps')">
-                    <x-input id="targetReps" type="number" inputmode="numeric" wire:model="targetReps" :invalid="$errors->has('targetReps')" class="numeric" />
-                </x-field>
-
-                <x-field :label="__('Weight')" for="targetWeight" :error="$errors->first('targetWeight')">
-                    <x-input id="targetWeight" type="number" step="0.1" inputmode="decimal" wire:model="targetWeight" :invalid="$errors->has('targetWeight')" class="numeric" />
-                </x-field>
+            <div class="mb-5 flex flex-wrap gap-2">
+                @foreach ($this->suggestions as $exercise)
+                    <button
+                        type="button"
+                        wire:key="suggestion-{{ $exercise->id }}"
+                        wire:click="addItem({{ $exercise->id }}, @js($exercise->name))"
+                        class="rounded-full bg-raised px-3 py-1.5 text-sm font-bold text-ink-soft transition hover:bg-accent-soft hover:text-accent"
+                    >
+                        {{ $exercise->name }}
+                    </button>
+                @endforeach
             </div>
-
-                <x-button type="submit" class="w-full sm:w-auto">
-                    <x-heroicon-o-plus class="size-4" />
-                    {{ __('Add') }}
-                </x-button>
-            </form>
         @endif
-    </section>
+
+        <livewire:exercise-picker />
+    </x-modal>
 </div>

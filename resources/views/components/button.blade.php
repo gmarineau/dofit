@@ -8,10 +8,10 @@
 @php
     $variants = [
         'primary' => 'bg-accent text-accent-ink hover:brightness-110',
-        'secondary' => 'border border-line bg-canvas text-ink hover:bg-raised',
+        'secondary' => 'border border-line bg-surface text-ink hover:bg-raised',
         'ghost' => 'text-ink-soft hover:bg-raised hover:text-ink',
         'danger' => 'bg-danger text-white hover:brightness-110',
-        'quiet-danger' => 'text-ink-muted hover:bg-raised hover:text-danger',
+        'quiet-danger' => 'text-danger hover:bg-danger-soft',
     ];
 
     $sizes = [

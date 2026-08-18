@@ -14,7 +14,11 @@ return new class extends Migration
         Schema::create('activities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('training_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('activity_type_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('exercise_id')->constrained()->cascadeOnDelete();
+            // The program item this activity came from, when the training was
+            // started from a program. Constrained once program_items exists.
+            $table->foreignId('program_item_id')->nullable();
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
     }

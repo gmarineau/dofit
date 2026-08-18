@@ -16,6 +16,14 @@ class ActivityPolicy
     }
 
     /**
+     * Determine whether the user can update the activity.
+     */
+    public function update(User $user, Activity $activity): bool
+    {
+        return $user->id === $activity->training->user_id;
+    }
+
+    /**
      * Determine whether the user can delete the activity.
      */
     public function delete(User $user, Activity $activity): bool

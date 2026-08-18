@@ -17,15 +17,18 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property string|null $name
  * @property Carbon $date
+ * @property Carbon|null $completed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $activities_count
+ * @property int|null $completed_activities_count
  * @property-read string $name_formatted
  * @property-read string $activities_formatted
+ * @property-read string $progress_formatted
  * @property-read User $user
  * @property-read Collection<int, Activity> $activities
  */
-#[Fillable(['name', 'date', 'user_id'])]
+#[Fillable(['name', 'date', 'user_id', 'completed_at'])]
 class Training extends Model
 {
     /** @use HasFactory<TrainingFactory> */
@@ -40,7 +43,16 @@ class Training extends Model
     {
         return [
             'date' => 'datetime',
+            'completed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Whether the user closed the session.
+     */
+    public function isCompleted(): bool
+    {
+        return $this->completed_at !== null;
     }
 
     /**
@@ -79,6 +91,27 @@ class Training extends Model
         $count = $this->activities_count ?? $this->activities->count();
 
         return trans_choice(':count activity|:count activities', $count, ['count' => $count]);
+    }
+
+    /**
+     * How far through the session the user is, as in "2/5".
+     *
+     * @return Attribute<string, never>
+     */
+    protected function progressFormatted(): Attribute
+    {
+        return Attribute::get(fn (): string => $this->formatProgress());
+    }
+
+    /**
+     * Build the "done/total" progress, preferring eager-loaded counts.
+     */
+    private function formatProgress(): string
+    {
+        $done = $this->completed_activities_count
+            ?? $this->activities->filter(fn (Activity $activity): bool => $activity->isCompleted())->count();
+
+        return $done.'/'.($this->activities_count ?? $this->activities->count());
     }
 
     /**

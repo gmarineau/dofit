@@ -14,14 +14,15 @@ return new class extends Migration
         Schema::create('program_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('program_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('activity_type_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('exercise_id')->constrained()->cascadeOnDelete();
             $table->unsignedSmallInteger('position')->default(0);
-            $table->unsignedTinyInteger('target_sets')->nullable();
-            $table->unsignedTinyInteger('target_reps')->nullable();
-            $table->float('target_weight')->nullable();
             $table->timestamps();
 
             $table->index(['program_id', 'position']);
+        });
+
+        Schema::table('activities', function (Blueprint $table) {
+            $table->foreign('program_item_id')->references('id')->on('program_items')->nullOnDelete();
         });
     }
 
@@ -30,6 +31,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('activities', function (Blueprint $table) {
+            $table->dropForeign(['program_item_id']);
+        });
+
         Schema::dropIfExists('program_items');
     }
 };

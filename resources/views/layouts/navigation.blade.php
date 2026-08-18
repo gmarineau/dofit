@@ -1,8 +1,8 @@
 @php
     $links = [
-        ['route' => 'dashboard', 'label' => __('Dashboard'), 'icon' => 'o-home'],
         ['route' => 'trainings.index', 'label' => __('Trainings'), 'icon' => 'o-bolt'],
         ['route' => 'programs.index', 'label' => __('Programs'), 'icon' => 'o-rectangle-stack'],
+        ['route' => 'exercises.index', 'label' => __('Exercises'), 'icon' => 'o-book-open'],
         ['route' => 'metrics.index', 'label' => __('Metrics'), 'icon' => 'o-scale'],
     ];
 @endphp
@@ -45,6 +45,14 @@
             </a>
         </div>
     </div>
+</header>
+
+{{-- Mobile: the wordmark is the way back to the dashboard, since the tab bar
+     has no room for it. --}}
+<header class="sticky top-0 z-30 flex h-14 items-center bg-canvas px-4 sm:hidden">
+    <a href="{{ route('dashboard') }}" wire:navigate class="text-lg font-extrabold tracking-tight text-ink">
+        {{ config('app.name') }}
+    </a>
 </header>
 
 {{-- Mobile: a tab bar within thumb reach. --}}

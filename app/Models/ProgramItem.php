@@ -5,28 +5,28 @@ namespace App\Models;
 use Database\Factories\ProgramItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
- * One exercise inside a program, with the targets to aim for.
+ * One exercise inside a program, with the blocks of sets to aim for.
  *
  * @property int $id
  * @property int $program_id
- * @property int $activity_type_id
+ * @property int $exercise_id
  * @property int $position
- * @property int|null $target_sets
- * @property int|null $target_reps
- * @property float|null $target_weight
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $target_formatted
  * @property-read Program $program
- * @property-read ActivityType $activityType
+ * @property-read Exercise $exercise
+ * @property-read Collection<int, ProgramTarget> $targets
  */
-#[Fillable(['program_id', 'activity_type_id', 'position', 'target_sets', 'target_reps', 'target_weight'])]
+#[Fillable(['program_id', 'exercise_id', 'position'])]
 class ProgramItem extends Model
 {
     /** @use HasFactory<ProgramItemFactory> */
@@ -41,14 +41,11 @@ class ProgramItem extends Model
     {
         return [
             'position' => 'integer',
-            'target_sets' => 'integer',
-            'target_reps' => 'integer',
-            'target_weight' => 'float',
         ];
     }
 
     /**
-     * The targets summarised as "3 x 10 @ 40", dropping whatever is unset.
+     * Every block of sets read as one line, as in "2 × 10 @ 60.0 kg · 2 × 10 @ 70.0 kg".
      *
      * @return Attribute<string, never>
      */
@@ -58,21 +55,14 @@ class ProgramItem extends Model
     }
 
     /**
-     * Build the target summary, leaving out the parts that were not set.
+     * Join the blocks of sets, leaving out the ones that hold nothing.
      */
     private function formatTarget(): string
     {
-        $target = array_filter([$this->target_sets, $this->target_reps]);
-
-        $summary = $target === [] ? '' : implode(' × ', $target);
-
-        if ($this->target_weight !== null) {
-            $weight = number_format($this->target_weight, 1, '.', "'").' kg';
-
-            return $summary === '' ? $weight : $summary.' @ '.$weight;
-        }
-
-        return $summary;
+        return $this->targets
+            ->map(fn (ProgramTarget $target): string => $target->label)
+            ->filter()
+            ->implode(' · ');
     }
 
     /**
@@ -84,10 +74,18 @@ class ProgramItem extends Model
     }
 
     /**
-     * @return BelongsTo<ActivityType, $this>
+     * @return BelongsTo<Exercise, $this>
      */
-    public function activityType(): BelongsTo
+    public function exercise(): BelongsTo
     {
-        return $this->belongsTo(ActivityType::class);
+        return $this->belongsTo(Exercise::class);
+    }
+
+    /**
+     * @return HasMany<ProgramTarget, $this>
+     */
+    public function targets(): HasMany
+    {
+        return $this->hasMany(ProgramTarget::class)->orderBy('position');
     }
 }

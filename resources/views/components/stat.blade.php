@@ -1,7 +1,13 @@
-@props(['label' => null, 'value' => null, 'unit' => null, 'caption' => null])
+@props(['label' => null, 'value' => null, 'unit' => null, 'caption' => null, 'icon' => null])
 
 <div {{ $attributes->class('rounded-2xl bg-raised px-4 py-3.5') }}>
-    <div class="text-xs font-bold tracking-wide text-ink-muted uppercase">{{ $label }}</div>
+    <div class="flex items-center gap-1.5 text-xs font-bold tracking-wide text-ink-muted uppercase">
+        @if ($icon)
+            <x-dynamic-component :component="'heroicon-'.$icon" class="size-3.5" />
+        @endif
+
+        {{ $label }}
+    </div>
 
     <div class="mt-1.5 flex items-baseline gap-1">
         <span class="numeric text-2xl leading-none font-extrabold text-ink">{{ $value }}</span>

@@ -47,7 +47,7 @@ new class extends Component
     </div>
 
     <section class="mb-8">
-        <x-section-heading>{{ __('Info') }}</x-section-heading>
+        <x-section-heading icon="o-user-circle">{{ __('Info') }}</x-section-heading>
 
         <div class="flex items-center justify-between gap-4 border-b border-line py-4">
             <span class="text-sm font-semibold text-ink-soft">{{ __('Birthdate') }}</span>
@@ -56,16 +56,16 @@ new class extends Component
     </section>
 
     <section class="mb-8">
-        <x-section-heading>{{ __('Exercises') }}</x-section-heading>
+        <x-section-heading icon="o-rectangle-stack">{{ __('Exercises') }}</x-section-heading>
 
-        <a href="{{ route('activity-types.index') }}" wire:navigate class="flex items-center justify-between gap-4 border-b border-line py-4">
-            <span class="text-sm font-semibold text-ink-soft">{{ __('Activity Types') }}</span>
+        <a href="{{ route('exercises.index') }}" wire:navigate class="flex items-center justify-between gap-4 border-b border-line py-4">
+            <span class="text-sm font-semibold text-ink-soft">{{ __('Exercise library') }}</span>
             <x-heroicon-o-chevron-right class="size-4 text-ink-muted" />
         </a>
     </section>
 
     <section class="mb-8">
-        <x-section-heading>{{ __('Settings') }}</x-section-heading>
+        <x-section-heading icon="o-cog-6-tooth">{{ __('Settings') }}</x-section-heading>
 
         <ul>
             @foreach ($this->settings as $setting)

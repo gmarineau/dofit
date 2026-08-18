@@ -53,7 +53,7 @@ new class extends Component
 ?>
 
 <div>
-    <x-page-header :title="__('New sequence')" :subtitle="$activity->activityType->type" :back="route('activities.show', $activity)" />
+    <x-page-header :title="__('New sequence')" :subtitle="$activity->exercise->name" :back="route('activities.show', $activity)" />
 
     <form wire:submit="save">
         <div class="grid grid-cols-2 gap-4">

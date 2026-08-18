@@ -17,7 +17,7 @@
     </head>
     <body class="flex min-h-full flex-col bg-canvas text-ink antialiased">
         <div class="flex flex-1 flex-col justify-center px-5 py-12">
-            <div class="mx-auto w-full max-w-sm">
+            <div class="mx-auto w-full max-w-sm rounded-3xl border border-line bg-surface p-6 sm:p-8">
                 {{ $slot }}
             </div>
         </div>

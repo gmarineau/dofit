@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\ActivityType;
 use App\Models\Exercise;
 use App\Models\Program;
 use App\Models\Training;
@@ -100,25 +99,27 @@ it('creates an activity from a library exercise and remembers where it came from
     $exercise = Exercise::where('slug', 'barbell-bench-press')->firstOrFail();
 
     Livewire::actingAs($this->user)
-        ->test('pages::activities.create', ['training' => $training])
-        ->call('chooseExercise', $exercise->id, $exercise->name);
+        ->test('pages::trainings.show', ['training' => $training])
+        ->call('addActivity', $exercise->id, $exercise->name);
 
-    $activityType = ActivityType::where('type', 'Barbell Bench Press')->firstOrFail();
+    $activity = $training->activities()->firstOrFail();
 
-    expect($activityType->user_id)->toBe($this->user->id)
-        ->and($activityType->exercise_id)->toBe($exercise->id)
-        ->and($activityType->exercise->primary_muscles)->toBe(['chest'])
-        ->and($training->activities()->count())->toBe(1);
+    // The library entry is used as is, not copied into an exercise of its own.
+    expect($activity->exercise_id)->toBe($exercise->id)
+        ->and($activity->exercise->primary_muscles)->toBe(['chest'])
+        ->and($this->user->exercises()->count())->toBe(0);
 });
 
 it('creates an activity from a name the library does not have', function () {
     $training = Training::factory()->for($this->user)->create();
 
     Livewire::actingAs($this->user)
-        ->test('pages::activities.create', ['training' => $training])
-        ->call('chooseExercise', null, 'Farmer Walk');
+        ->test('pages::trainings.show', ['training' => $training])
+        ->call('addActivity', null, 'Farmer Walk');
 
-    expect(ActivityType::where('type', 'Farmer Walk')->firstOrFail()->exercise_id)->toBeNull();
+    $exercise = $this->user->exercises()->where('name', 'Farmer Walk')->firstOrFail();
+
+    expect($exercise->isCustom())->toBeTrue();
 });
 
 it('adds a library exercise to a program with its targets', function () {
@@ -127,16 +128,15 @@ it('adds a library exercise to a program with its targets', function () {
 
     Livewire::actingAs($this->user)
         ->test('pages::programs.edit', ['program' => $program])
-        ->call('chooseExercise', $exercise->id, $exercise->name)
-        ->assertSet('type', 'Barbell Bench Press')
+        ->call('addItem', $exercise->id, $exercise->name)
+        ->assertSet('picking', false)
         ->set('targetSets', 5)
         ->set('targetReps', 5)
-        ->call('addItem')
-        ->assertHasNoErrors()
-        ->assertSet('type', '');
+        ->call('addTarget')
+        ->assertHasNoErrors();
 
     $item = $program->items()->firstOrFail();
 
-    expect($item->activityType->exercise_id)->toBe($exercise->id)
+    expect($item->exercise_id)->toBe($exercise->id)
         ->and($item->target_formatted)->toBe('5 × 5');
 });

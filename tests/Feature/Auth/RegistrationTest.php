@@ -25,7 +25,7 @@ it('registers a new user and logs them in', function () {
     Event::assertDispatched(Registered::class);
 });
 
-it('gives a new user their default activity types and settings', function () {
+it('gives a new user their default settings', function () {
     Livewire::test('pages::auth.register')
         ->set('name', 'Greg')
         ->set('email', 'greg@example.com')
@@ -35,8 +35,9 @@ it('gives a new user their default activity types and settings', function () {
 
     $user = User::where('email', 'greg@example.com')->firstOrFail();
 
-    expect($user->activityTypes)->toHaveCount(count(UserSetupService::DEFAULT_ACTIVITY_TYPES))
-        ->and($user->settings)->toHaveCount(count(UserSetupService::DEFAULT_SETTINGS));
+    // Exercises come from the shared library, so only settings are seeded.
+    expect($user->settings)->toHaveCount(count(UserSetupService::DEFAULT_SETTINGS))
+        ->and($user->exercises)->toBeEmpty();
 });
 
 it('rejects an email that is already taken', function () {

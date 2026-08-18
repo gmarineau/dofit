@@ -15,20 +15,59 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $training_id
- * @property int $activity_type_id
+ * @property int $exercise_id
+ * @property int|null $program_item_id
+ * @property Carbon|null $completed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $sequences_count
  * @property-read string $sequences_formatted
- * @property-read ActivityType $activityType
+ * @property-read Exercise $exercise
+ * @property-read ProgramItem|null $programItem
  * @property-read Training $training
  * @property-read Collection<int, Sequence> $sequences
  */
-#[Fillable(['training_id', 'activity_type_id'])]
+#[Fillable(['training_id', 'exercise_id', 'program_item_id', 'completed_at'])]
 class Activity extends Model
 {
     /** @use HasFactory<ActivityFactory> */
     use HasFactory;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'completed_at' => 'datetime',
+        ];
+    }
+
+    /**
+     * Whether the user marked the activity as done.
+     */
+    public function isCompleted(): bool
+    {
+        return $this->completed_at !== null;
+    }
+
+    /**
+     * Mark the activity as done, keeping the time it was ticked off.
+     */
+    public function complete(): void
+    {
+        $this->update(['completed_at' => now()]);
+    }
+
+    /**
+     * Put the activity back on the to-do list.
+     */
+    public function reopen(): void
+    {
+        $this->update(['completed_at' => null]);
+    }
 
     /**
      * A pluralized count of the activity's sequences.
@@ -51,11 +90,19 @@ class Activity extends Model
     }
 
     /**
-     * @return BelongsTo<ActivityType, $this>
+     * @return BelongsTo<Exercise, $this>
      */
-    public function activityType(): BelongsTo
+    public function exercise(): BelongsTo
     {
-        return $this->belongsTo(ActivityType::class);
+        return $this->belongsTo(Exercise::class);
+    }
+
+    /**
+     * @return BelongsTo<ProgramItem, $this>
+     */
+    public function programItem(): BelongsTo
+    {
+        return $this->belongsTo(ProgramItem::class);
     }
 
     /**
