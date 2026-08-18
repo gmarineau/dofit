@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            // Null falls back to the application locale.
+            $table->string('locale', 5)->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

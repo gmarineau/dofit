@@ -67,3 +67,46 @@ it('accepts an empty birthdate', function () {
 
     expect($this->user->fresh()->birthdate)->toBeNull();
 });
+
+it('changes the language the interface is read in', function () {
+    $user = User::factory()->create(['locale' => null]);
+
+    Livewire::actingAs($user)
+        ->test('pages::account.edit')
+        ->assertSet('locale', config('app.locale'))
+        ->set('locale', 'en')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($user->fresh()->locale)->toBe('en');
+});
+
+it('refuses a language the app does not ship', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::account.edit')
+        ->set('locale', 'kl')
+        ->call('save')
+        ->assertHasErrors(['locale']);
+
+    expect($user->fresh()->locale)->not->toBe('kl');
+});
+
+it('renders the interface in the user’s language', function () {
+    $english = User::factory()->create(['locale' => 'en']);
+
+    $this->actingAs($english)->get(route('trainings.index'))->assertSee('Trainings');
+
+    $french = User::factory()->create(['locale' => 'fr']);
+
+    $this->actingAs($french)->get(route('trainings.index'))->assertSee('Entraînements');
+});
+
+it('falls back to the application language for a user without one', function () {
+    $user = User::factory()->create(['locale' => null]);
+
+    $this->actingAs($user)->get(route('trainings.index'));
+
+    expect(app()->getLocale())->toBe(config('app.locale'));
+});

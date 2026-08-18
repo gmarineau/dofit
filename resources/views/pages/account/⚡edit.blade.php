@@ -11,6 +11,8 @@ new class extends Component
 
     public ?string $birthdate = null;
 
+    public string $locale = '';
+
     /**
      * Prefill the form with the signed-in user's details.
      */
@@ -21,6 +23,7 @@ new class extends Component
         $this->name = $user->name;
         $this->email = $user->email;
         $this->birthdate = $user->birthdate?->format('Y-m-d');
+        $this->locale = $user->locale ?? config('app.locale');
     }
 
     /**
@@ -34,6 +37,7 @@ new class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore(auth()->id())],
             'birthdate' => ['nullable', 'date'],
+            'locale' => ['required', 'string', Rule::in(array_keys(config('dofit.locales')))],
         ];
     }
 
@@ -44,6 +48,8 @@ new class extends Component
     {
         auth()->user()->update($this->validate());
 
+        // The redirect renders with the middleware's locale, so the new
+        // language is in place on the very next page.
         $this->redirect(route('account'), navigate: true);
     }
 
@@ -68,6 +74,29 @@ new class extends Component
         <x-field :label="__('E-mail')" for="email" :error="$errors->first('email')">
             <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="email" />
         </x-field>
+
+        <div class="mb-5">
+            <span class="mb-2 block text-sm font-bold text-ink-soft">{{ __('Language') }}</span>
+
+            <div class="flex flex-wrap gap-1.5">
+                @foreach (config('dofit.locales') as $code => $label)
+                    <button
+                        type="button"
+                        wire:key="locale-{{ $code }}"
+                        wire:click="$set('locale', @js($code))"
+                        @class([
+                            'rounded-full px-3 py-1.5 text-xs font-bold transition',
+                            'bg-accent text-accent-ink' => $locale === $code,
+                            'bg-raised text-ink-soft hover:text-ink' => $locale !== $code,
+                        ])
+                    >
+                        {{ $label }}
+                    </button>
+                @endforeach
+            </div>
+
+            <x-error :messages="$errors->first('locale')" />
+        </div>
 
         <x-field :label="__('Birthdate')" for="birthdate" :error="$errors->first('birthdate')">
             <x-input id="birthdate" type="date" wire:model="birthdate" :invalid="$errors->has('birthdate')" />

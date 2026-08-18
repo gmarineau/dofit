@@ -53,6 +53,11 @@ new class extends Component
             <span class="text-sm font-semibold text-ink-soft">{{ __('Birthdate') }}</span>
             <span class="numeric text-sm font-bold text-ink">{{ $user->birthdate_formatted ?: '—' }}</span>
         </div>
+
+        <div class="flex items-center justify-between gap-4 border-b border-line py-4">
+            <span class="text-sm font-semibold text-ink-soft">{{ __('Language') }}</span>
+            <span class="text-sm font-bold text-ink">{{ config('dofit.locales')[app()->getLocale()] ?? app()->getLocale() }}</span>
+        </div>
     </section>
 
     <section class="mb-8">

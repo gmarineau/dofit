@@ -21,6 +21,7 @@ use Illuminate\Support\Str;
  * @property string $name
  * @property Carbon|null $birthdate
  * @property string $email
+ * @property string|null $locale
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
@@ -33,7 +34,7 @@ use Illuminate\Support\Str;
  * @property-read Collection<int, Metric> $metrics
  * @property-read Collection<int, Setting> $settings
  */
-#[Fillable(['name', 'birthdate', 'email', 'password'])]
+#[Fillable(['name', 'birthdate', 'email', 'password', 'locale'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
