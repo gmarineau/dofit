@@ -1,20 +1,6 @@
 #!/bin/sh
 set -e
 
-echo " [-] Setting up secrets"
-
-FILE="/run/secrets/app_key"
-if [ -f "$FILE" ]; then
-    APP_KEY=$(cat "$FILE")
-    export APP_KEY
-fi
-
-FILE="/run/secrets/db_password"
-if [ -f "$FILE" ]; then
-    DB_PASSWORD=$(cat "$FILE")
-    export DB_PASSWORD
-fi
-
 echo " [-] Caching Laravel config, routes and views"
 php artisan config:cache
 php artisan route:cache

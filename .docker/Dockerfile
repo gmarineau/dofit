@@ -17,23 +17,18 @@ ENV SERVER_NAME=:80 \
     PHP_UPLOAD_MAX_FILESIZE=32M \
     PHP_POST_MAX_SIZE=32M
 
+# curl is the binary used by the healthcheck below, not the PHP extension,
+# which the official image already bundles.
 RUN apk add --no-cache curl
 
+# Everything else Laravel needs (ctype, dom, fileinfo, filter, hash, iconv,
+# json, libxml, mbstring, openssl, pcre, session, tokenizer, pdo_sqlite) is
+# built into the official PHP image already.
 RUN install-php-extensions \
-        bcmath \
-        curl \
-        exif \
-        gd \
-        gettext \
-        intl \
         opcache \
         pcntl \
         pdo_mysql \
-        pdo_pgsql \
-        pdo_sqlite \
-        redis \
-        sockets \
-        zip
+        redis
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && sed -i "s|;*memory_limit =.*|memory_limit = ${PHP_MEMORY_LIMIT}|i" "$PHP_INI_DIR/php.ini" \
