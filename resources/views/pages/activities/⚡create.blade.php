@@ -3,15 +3,16 @@
 use App\Models\Training;
 use App\Services\ActivityTypeService;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Validate;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component
 {
     public Training $training;
 
-    #[Validate('required|string|max:255')]
     public string $type = '';
+
+    public ?int $exerciseId = null;
 
     /**
      * Load the training the activity will belong to.
@@ -24,24 +25,48 @@ new class extends Component
     }
 
     /**
-     * The activity types already used by this user, offered as suggestions.
+     * The activity types this user already logged, offered as shortcuts.
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\ActivityType>
      */
     #[Computed]
-    public function activityTypes()
+    public function recentTypes()
     {
         return app(ActivityTypeService::class)->getUserActivityTypes(auth()->user());
     }
 
     /**
-     * Create the activity, reusing the activity type when it already exists.
+     * Record the exercise the picker handed over.
      */
-    public function save(ActivityTypeService $activityTypes): void
+    #[On('exercise-chosen')]
+    public function chooseExercise(?int $id, string $name): void
     {
-        $this->validate();
+        $this->exerciseId = $id;
+        $this->type = $name;
 
-        $activityType = $activityTypes->getActivityType(auth()->user(), $this->type);
+        $this->save();
+    }
+
+    /**
+     * Reuse one of the user's own activity types.
+     */
+    public function chooseType(string $type): void
+    {
+        $this->exerciseId = null;
+        $this->type = $type;
+
+        $this->save();
+    }
+
+    /**
+     * Create the activity and open it.
+     */
+    public function save(): void
+    {
+        $this->validate(['type' => ['required', 'string', 'max:255']]);
+
+        $activityType = app(ActivityTypeService::class)
+            ->getActivityType(auth()->user(), $this->type, $this->exerciseId);
 
         $activity = $this->training->activities()->create([
             'activity_type_id' => $activityType->id,
@@ -63,35 +88,30 @@ new class extends Component
 <div>
     <x-page-header :title="__('New activity')" :back="route('trainings.show', $training)" />
 
-    <form wire:submit="save">
-        <x-field :label="__('Type')" for="type" :error="$errors->first('type')">
-            <x-input id="type" type="text" wire:model="type" :invalid="$errors->has('type')" autocomplete="off" autofocus />
-        </x-field>
+    <x-error :messages="$errors->first('type')" class="mb-4" />
 
-        @if ($this->activityTypes->isNotEmpty())
-            <div class="mb-5 -mt-2 flex flex-wrap gap-2">
-                @foreach ($this->activityTypes as $activityType)
+    @if ($this->recentTypes->isNotEmpty())
+        <section class="mb-8">
+            <x-section-heading>{{ __('Your exercises') }}</x-section-heading>
+
+            <div class="flex flex-wrap gap-2">
+                @foreach ($this->recentTypes as $activityType)
                     <button
                         type="button"
-                        wire:key="suggestion-{{ $activityType->id }}"
-                        wire:click="$set('type', @js($activityType->type))"
-                        class="rounded-full bg-raised px-3 py-1.5 text-xs font-bold text-ink-soft transition hover:bg-accent-soft hover:text-accent"
+                        wire:key="recent-{{ $activityType->id }}"
+                        wire:click="chooseType(@js($activityType->type))"
+                        class="rounded-full bg-raised px-3 py-1.5 text-sm font-bold text-ink-soft transition hover:bg-accent-soft hover:text-accent"
                     >
                         {{ $activityType->type }}
                     </button>
                 @endforeach
             </div>
-        @endif
+        </section>
+    @endif
 
-        <div class="flex items-center gap-3 pt-2">
-            <x-button type="submit" class="flex-1 sm:flex-none">
-                {{ __('Save') }}
-                <x-heroicon-o-arrow-path class="size-4 animate-spin" wire:loading wire:target="save" />
-            </x-button>
+    <section>
+        <x-section-heading>{{ __('Pick an exercise') }}</x-section-heading>
 
-            <x-button :href="route('trainings.show', $training)" as="a" variant="ghost" wire:navigate>
-                {{ __('Cancel') }}
-            </x-button>
-        </div>
-    </form>
+        <livewire:exercise-picker />
+    </section>
 </div>

@@ -21,10 +21,12 @@ ENV SERVER_NAME=:80 \
 # which the official image already bundles.
 RUN apk add --no-cache curl
 
-# Everything else Laravel needs (ctype, dom, fileinfo, filter, hash, iconv,
-# json, libxml, mbstring, openssl, pcre, session, tokenizer, pdo_sqlite) is
-# built into the official PHP image already.
+# gd drives the media library's image conversions. Everything else Laravel
+# needs (ctype, dom, fileinfo, filter, hash, iconv, json, libxml, mbstring,
+# openssl, pcre, session, tokenizer, pdo_sqlite) is built into the official
+# PHP image already.
 RUN install-php-extensions \
+        gd \
         opcache \
         pcntl \
         pdo_mysql \

@@ -29,11 +29,15 @@ class ActivityTypeService
 
     /**
      * Resolve an activity type by name for the given user, creating it the
-     * first time that name is used.
+     * first time that name is used. When the name came from the shared
+     * library, the entry is recorded so its muscles stay reachable.
      */
-    public function getActivityType(User $user, string $type): ActivityType
+    public function getActivityType(User $user, string $type, ?int $exerciseId = null): ActivityType
     {
-        return $user->activityTypes()->firstOrCreate(['type' => $type]);
+        return $user->activityTypes()->firstOrCreate(
+            ['type' => $type],
+            ['exercise_id' => $exerciseId],
+        );
     }
 
     /**

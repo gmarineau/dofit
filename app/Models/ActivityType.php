@@ -15,13 +15,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property int $user_id
+ * @property int|null $exercise_id
  * @property string $type
  * @property int|null $activities_count
  * @property-read string $activities_formatted
+ * @property-read Exercise|null $exercise
  * @property-read User $user
  * @property-read Collection<int, Activity> $activities
  */
-#[Fillable(['type', 'user_id'])]
+#[Fillable(['type', 'user_id', 'exercise_id'])]
 #[WithoutTimestamps]
 class ActivityType extends Model
 {
@@ -46,6 +48,17 @@ class ActivityType extends Model
         $count = $this->activities_count ?? $this->activities->count();
 
         return trans_choice(':count activity|:count activities', $count, ['count' => $count]);
+    }
+
+    /**
+     * The library entry this exercise came from, when the user picked one
+     * rather than typing a name of their own.
+     *
+     * @return BelongsTo<Exercise, $this>
+     */
+    public function exercise(): BelongsTo
+    {
+        return $this->belongsTo(Exercise::class);
     }
 
     /**

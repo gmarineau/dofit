@@ -2,10 +2,8 @@
     $links = [
         ['route' => 'dashboard', 'label' => __('Dashboard'), 'icon' => 'o-home'],
         ['route' => 'trainings.index', 'label' => __('Trainings'), 'icon' => 'o-bolt'],
+        ['route' => 'programs.index', 'label' => __('Programs'), 'icon' => 'o-rectangle-stack'],
         ['route' => 'metrics.index', 'label' => __('Metrics'), 'icon' => 'o-scale'],
-        ['route' => 'activities.index', 'label' => __('Activities'), 'icon' => 'o-chart-bar'],
-        ['route' => 'reports.index', 'label' => __('Reports'), 'icon' => 'o-clipboard-document-list'],
-        ['route' => 'activity-types.index', 'label' => __('Activity Types'), 'icon' => 'o-list-bullet'],
     ];
 @endphp
 

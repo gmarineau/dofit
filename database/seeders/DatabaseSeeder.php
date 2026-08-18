@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ActivityTypeSeeder::class,
             SettingSeeder::class,
+            ProgramSeeder::class,
             TrainingSeeder::class,
             MetricSeeder::class,
         ]);

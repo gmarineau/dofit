@@ -10,14 +10,38 @@ new class extends Component
     public ?int $deletingId = null;
 
     /**
-     * The activity types the user has created, with their activity counts.
+     * Every activity type the user owns, each with the progression of its
+     * latest sequences.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, ActivityType>
+     * @return list<array{
+     *     type: ActivityType,
+     *     labels: list<string>,
+     *     datasets: list<array{label: string, data: list<int|float>}>,
+     * }>
      */
     #[Computed]
-    public function activityTypes()
+    public function activityTypes(): array
     {
-        return app(ActivityTypeService::class)->getUserActivityTypes(auth()->user());
+        $service = app(ActivityTypeService::class);
+
+        return $service->getUserActivityTypes(auth()->user())
+            ->map(function (ActivityType $activityType) use ($service): array {
+                $values = $service->getValues($activityType);
+
+                return [
+                    'type' => $activityType,
+                    // Sequences have no meaningful date, so they are numbered.
+                    'labels' => array_map(
+                        fn (int $index): string => (string) ($index + 1),
+                        array_keys($values['weight']),
+                    ),
+                    'datasets' => [
+                        ['label' => __('Weight'), 'data' => $values['weight']],
+                        ['label' => __('Repetition'), 'data' => $values['repetition']],
+                    ],
+                ];
+            })
+            ->all();
     }
 
     /**
@@ -63,35 +87,34 @@ new class extends Component
 ?>
 
 <div>
-    <x-page-header :title="__('Activity Types')" />
+    <x-page-header :title="__('Activity Types')" :subtitle="__('Your exercises and how they progress.')" :back="route('account')" />
 
-    @if ($this->activityTypes->isNotEmpty())
-        <ul>
-            @foreach ($this->activityTypes as $activityType)
-                <li wire:key="activity-type-{{ $activityType->id }}" class="group flex items-center gap-3 border-b border-line py-4 last:border-0">
-                    <div class="min-w-0 flex-1">
-                        <div class="truncate font-bold text-ink">{{ $activityType->type }}</div>
-                        <div class="mt-0.5 text-sm font-semibold text-ink-soft">{{ $activityType->activities_formatted }}</div>
-                    </div>
+    @forelse ($this->activityTypes as $entry)
+        <section class="mb-10" wire:key="type-{{ $entry['type']->id }}">
+            <div class="mb-2 flex items-center gap-3">
+                <div class="min-w-0 flex-1">
+                    <h2 class="truncate font-bold text-ink">{{ $entry['type']->type }}</h2>
+                    <p class="mt-0.5 text-sm font-semibold text-ink-soft">{{ $entry['type']->activities_formatted }}</p>
+                </div>
 
-                    <x-button
-                            type="button"
-                            variant="quiet-danger"
-                            size="icon-sm"
-                            class="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
-                            wire:click="confirmDelete({{ $activityType->id }})"
-                            aria-label="{{ __('Delete activity type') }}"
-                        >
-                            <x-heroicon-o-x-mark class="size-4" />
-                        </x-button>
-                </li>
-            @endforeach
-        </ul>
-    @else
+                <x-button
+                    type="button"
+                    variant="quiet-danger"
+                    size="icon-sm"
+                    wire:click="confirmDelete({{ $entry['type']->id }})"
+                    aria-label="{{ __('Delete activity type') }}"
+                >
+                    <x-heroicon-o-x-mark class="size-4" />
+                </x-button>
+            </div>
+
+            <x-chart :labels="$entry['labels']" :datasets="$entry['datasets']" height="h-40" />
+        </section>
+    @empty
         <x-empty-state icon="o-list-bullet">
             {{ __('No activity type yet. They are created as you log activities.') }}
         </x-empty-state>
-    @endif
+    @endforelse
 
     <x-confirm-delete
         :show="$deletingId !== null"

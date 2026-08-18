@@ -75,6 +75,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany<Program, $this>
+     */
+    public function programs(): HasMany
+    {
+        return $this->hasMany(Program::class);
+    }
+
+    /**
      * @return HasMany<Training, $this>
      */
     public function trainings(): HasMany

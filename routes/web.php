@@ -19,8 +19,13 @@ Route::middleware('auth')->group(function () {
         Route::livewire('{training}', 'pages::trainings.show')->name('show');
     });
 
+    Route::prefix('programs')->name('programs.')->group(function () {
+        Route::livewire('/', 'pages::programs.index')->name('index');
+        Route::livewire('create', 'pages::programs.create')->name('create');
+        Route::livewire('{program}/edit', 'pages::programs.edit')->name('edit');
+    });
+
     Route::prefix('activities')->name('activities.')->group(function () {
-        Route::livewire('/', 'pages::activities.index')->name('index');
         Route::livewire('{training}/create', 'pages::activities.create')->name('create');
         Route::livewire('{activity}', 'pages::activities.show')->name('show');
     });
@@ -45,10 +50,6 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::livewire('{setting}/edit', 'pages::settings.edit')->name('edit');
-    });
-
-    Route::prefix('reports')->name('reports.')->group(function () {
-        Route::livewire('/', 'pages::reports.index')->name('index');
     });
 
     Route::post('/logout', LogoutController::class)->name('logout');

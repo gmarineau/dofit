@@ -2,6 +2,7 @@
     'variant' => 'primary',
     'size' => 'base',
     'as' => 'button',
+    'disabled' => false,
 ])
 
 @php
@@ -32,5 +33,5 @@
 @if ($as === 'a')
     <a {{ $attributes->class($classes) }}>{{ $slot }}</a>
 @else
-    <button {{ $attributes->merge(['type' => 'submit'])->class($classes) }}>{{ $slot }}</button>
+    <button @disabled($disabled) {{ $attributes->merge(['type' => 'submit'])->class($classes) }}>{{ $slot }}</button>
 @endif

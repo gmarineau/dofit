@@ -26,13 +26,13 @@ it('renders every authenticated page', function (string $route) {
     '/',
     '/trainings',
     '/trainings/create',
-    '/activities',
+    '/programs',
+    '/programs/create',
     '/metrics',
     '/metrics/create',
     '/activity-types',
     '/account',
     '/account/edit',
-    '/reports',
 ]);
 
 it('renders every page that takes a model', function () {

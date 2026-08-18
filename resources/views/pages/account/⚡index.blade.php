@@ -56,6 +56,15 @@ new class extends Component
     </section>
 
     <section class="mb-8">
+        <x-section-heading>{{ __('Exercises') }}</x-section-heading>
+
+        <a href="{{ route('activity-types.index') }}" wire:navigate class="flex items-center justify-between gap-4 border-b border-line py-4">
+            <span class="text-sm font-semibold text-ink-soft">{{ __('Activity Types') }}</span>
+            <x-heroicon-o-chevron-right class="size-4 text-ink-muted" />
+        </a>
+    </section>
+
+    <section class="mb-8">
         <x-section-heading>{{ __('Settings') }}</x-section-heading>
 
         <ul>
