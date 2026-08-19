@@ -6,6 +6,7 @@ use App\Models\Sequence;
 use App\Models\Training;
 use App\Models\User;
 use App\Services\ExerciseService;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Meilisearch\Exceptions\CommunicationException;
 
@@ -384,4 +385,21 @@ it('drops the source filter when the same one is tapped again', function () {
         ->assertSet('source', null)
         ->assertSee('My Own Move')
         ->assertSee('Imported Move');
+});
+
+it('stores the illustrations on the disk the configuration names', function () {
+    config()->set('media-library.disk_name', 's3');
+    Storage::fake('s3');
+
+    $exercise = libraryExercise();
+
+    $exercise->addMediaFromString(jpegFixture())
+        ->usingFileName('bench-press-0.jpg')
+        ->toMediaCollection(Exercise::ILLUSTRATIONS);
+
+    $illustration = $exercise->getFirstMedia(Exercise::ILLUSTRATIONS);
+
+    expect($illustration->disk)->toBe('s3');
+
+    Storage::disk('s3')->assertExists("{$illustration->id}/bench-press-0.jpg");
 });

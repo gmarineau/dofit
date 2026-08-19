@@ -27,3 +27,8 @@ Toujours lire via `instructionSteps(?string $locale = null): array`, jamais `$ex
 Le fallback est implicite : `Translatable::$fallbackLocale` n'est pas initialisé, donc le package retombe sur `config('app.fallback_locale')` (`en`) via la sémantique `isset()` du `??`. Rien à configurer dans un service provider.
 
 Assigner une **liste** (`['Étape 1']`) écrit la locale courante ; assigner une **map** (`['fr' => [...]]`) remplace l'ensemble des traductions. C'est pour ça que les anciennes fixtures de test ont survécu sans modification.
+
+## Le disque des illustrations vient de la config, jamais en dur
+La collection `illustrations` n'appelle pas `useDisk()` : elle suit `media-library.disk_name`, qui vaut déjà `env('MEDIA_DISK', 'public')` dans la config du paquet. Ne pas remettre `useDisk('public')` en dur, et ne pas introduire de clé maison en doublon — `MEDIA_DISK=s3` suffit à tout basculer.
+Côté tests, faker le disque configuré : `Storage::fake(config('media-library.disk_name'))`, pas `Storage::fake('public')`.
+Les vues passent par `getUrl()` / `getFirstMediaUrl()`, donc rien à changer pour S3 tant que le disque a bien une `url` configurée.

@@ -99,12 +99,15 @@ class Exercise extends Model implements HasMedia
      * Illustrations are fetched on demand by the import commands. GIFs are
      * accepted because exercises-dataset ships animations alongside its
      * thumbnails.
+     *
+     * No `useDisk()`: the collection follows `media-library.disk_name`, which
+     * is `MEDIA_DISK` (`public` by default), so a deployment may serve the
+     * illustrations from `s3` without touching this model.
      */
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection(self::ILLUSTRATIONS)
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
-            ->useDisk('public');
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
     }
 
     /**

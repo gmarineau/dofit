@@ -54,7 +54,7 @@ function fakeUpstream(?int $dataStatus = null, ?int $imageStatus = null): void
 }
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake(config('media-library.disk_name'));
 });
 
 it('imports nothing until the command is run', function () {

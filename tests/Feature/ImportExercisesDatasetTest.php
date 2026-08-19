@@ -73,7 +73,7 @@ function fakeDataset(?int $dataStatus = null, ?int $mediaStatus = null): void
 }
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake(config('media-library.disk_name'));
 });
 
 it('imports the dataset without media by default', function () {
