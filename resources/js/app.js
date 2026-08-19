@@ -1,6 +1,6 @@
 import Chart from 'chart.js/auto';
 
-Chart.defaults.font.family = 'Nunito, ui-sans-serif, system-ui, sans-serif';
+Chart.defaults.font.family = '"Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif';
 Chart.defaults.font.weight = 600;
 Chart.defaults.animation.duration = 400;
 

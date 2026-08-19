@@ -9,6 +9,9 @@
 
         @include('layouts.partials.theme-script')
 
+        {{-- Preloads and @font-face for the self-hosted family declared in vite.config.js. --}}
+        @fonts
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles

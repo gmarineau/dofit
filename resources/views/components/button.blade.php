@@ -15,10 +15,11 @@
     ];
 
     $sizes = [
-        'base' => 'h-11 gap-2 rounded-full px-5 text-sm',
-        'sm' => 'h-9 gap-1.5 rounded-full px-4 text-xs',
-        'icon' => 'size-11 rounded-full',
-        'icon-sm' => 'size-9 rounded-full',
+        'lg' => 'h-13 gap-2.5 rounded-xl px-6 text-[15.5px] font-extrabold tracking-[-0.01em]',
+        'base' => 'h-11 gap-2 rounded-xl px-5 text-sm',
+        'sm' => 'h-9 gap-1.5 rounded-[10px] px-4 text-xs',
+        'icon' => 'size-11 rounded-xl',
+        'icon-sm' => 'size-9 rounded-[10px]',
     ];
 
     $classes = implode(' ', [

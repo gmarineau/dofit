@@ -9,7 +9,7 @@
         },
     }"
     x-on:click="toggle()"
-    {{ $attributes->class('inline-flex size-11 shrink-0 items-center justify-center rounded-full text-ink-soft transition hover:bg-raised hover:text-ink') }}
+    {{ $attributes->class('inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] text-ink-soft transition hover:bg-raised hover:text-ink') }}
     :aria-label="dark ? '{{ __('Switch to light mode') }}' : '{{ __('Switch to dark mode') }}'"
 >
     <x-heroicon-o-sun class="size-5" x-show="dark" x-cloak />

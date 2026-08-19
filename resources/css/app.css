@@ -9,13 +9,14 @@
 /*
 | The colour rule
 |--------------------------------------------------------------------------
-| Blue is the only colour in the interface: it marks what is active, what is
-| a primary action, and what carries data. Everything else is a neutral grey.
-| Red appears solely on destructive actions. Nothing else gets a hue.
+| The interface sits on neutral grey and carries two hues. Blue marks what is
+| active, what is a primary action, and what carries data. Terracotta marks a
+| movement the user earned: a trend, a personal record. Red appears solely on
+| destructive actions. Nothing else gets a hue.
 */
 
 @theme {
-    --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     /* The DoFit blue, carried over from the original theme. */
     --color-brand-50: #eff9fe;
@@ -30,49 +31,78 @@
     --color-brand-900: #0e466a;
     --color-brand-950: #092d46;
 
+    /* Cards sit a touch rounder than the 16px of `rounded-2xl`. */
+    --radius-card: 18px;
+
     /* Resolved from the tokens below, so one `dark` class flips everything. */
     --color-canvas: var(--ui-canvas);
     --color-surface: var(--ui-surface);
     --color-raised: var(--ui-raised);
     --color-line: var(--ui-line);
+    --color-line-soft: var(--ui-line-soft);
     --color-ink: var(--ui-ink);
+    --color-title: var(--ui-title);
     --color-ink-soft: var(--ui-ink-soft);
     --color-ink-muted: var(--ui-ink-muted);
+    --color-ink-faint: var(--ui-ink-faint);
     --color-accent: var(--ui-accent);
     --color-accent-ink: var(--ui-accent-ink);
     --color-accent-soft: var(--ui-accent-soft);
+    --color-accent-fade: var(--ui-accent-fade);
+    --color-bar: var(--ui-bar);
+    --color-bar-fade: var(--ui-bar-fade);
+    --color-warm: var(--ui-warm);
     --color-danger: var(--ui-danger);
     --color-danger-soft: var(--ui-danger-soft);
+
+    /* The primary action lifts off the paper; nothing else casts a shadow. */
+    --shadow-accent: 0 6px 16px var(--ui-accent-shadow);
 }
 
 :root {
-    --ui-canvas: #e9f1fd;
+    --ui-canvas: #f4f4f5;
     --ui-surface: #ffffff;
-    --ui-raised: #eef3fa;
-    --ui-line: #dde6f3;
-    --ui-ink: #101319;
-    --ui-ink-soft: #5b6270;
-    --ui-ink-muted: #98a0ae;
-    --ui-accent: #07689f;
+    --ui-raised: #eeeef0;
+    --ui-line: #e4e4e7;
+    --ui-line-soft: #f1f1f3;
+    --ui-ink: #18181b;
+    --ui-title: #123a5e;
+    --ui-ink-soft: #52525b;
+    --ui-ink-muted: #7d7d86;
+    --ui-ink-faint: #a1a1aa;
+    --ui-accent: #0b5f95;
     --ui-accent-ink: #ffffff;
-    --ui-accent-soft: #d9eaf8;
+    --ui-accent-soft: #eef4fa;
+    --ui-accent-fade: #4a8db8;
+    --ui-accent-shadow: rgb(11 95 149 / 0.24);
+    --ui-bar: #d3e2ee;
+    --ui-bar-fade: #e6eef4;
+    --ui-warm: #b0603a;
     --ui-danger: #d94055;
     --ui-danger-soft: #fdecef;
 }
 
 .dark {
-    --ui-canvas: #0f1216;
-    --ui-surface: #161a20;
-    --ui-raised: #1f242c;
-    --ui-line: #252b34;
-    --ui-ink: #f2f4f7;
-    --ui-ink-soft: #a4adbb;
-    --ui-ink-muted: #6d7684;
-    --ui-accent: #6bbde6;
+    --ui-canvas: #111113;
+    --ui-surface: #1a1a1d;
+    --ui-raised: #232327;
+    --ui-line: #2c2c31;
+    --ui-line-soft: #202024;
+    --ui-ink: #f4f4f5;
+    --ui-title: #cfe1f0;
+    --ui-ink-soft: #a6a6ae;
+    --ui-ink-muted: #82828b;
+    --ui-ink-faint: #64646d;
+    --ui-accent: #6bb4e0;
     --ui-accent-ink: #08161f;
-    --ui-accent-soft: #14293a;
-    --ui-danger: #f27183;
-    --ui-danger-soft: #3a1b21;
+    --ui-accent-soft: #16293a;
+    --ui-accent-fade: #3f7ba3;
+    --ui-accent-shadow: rgb(107 180 224 / 0.22);
+    --ui-bar: #2f3d47;
+    --ui-bar-fade: #262e35;
+    --ui-warm: #e09268;
+    --ui-danger: #f2887b;
+    --ui-danger-soft: #3a201b;
 }
 
 @layer base {
