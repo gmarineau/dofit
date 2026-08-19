@@ -4,19 +4,11 @@ on:
   push:
     branches:
       - main
+    # Releases are tagged by hand: `git tag v1.2.3 && git push origin v1.2.3`.
+    # A tag pushed by a person triggers this, unlike one pushed by Actions.
+    tags:
+      - 'v*'
   pull_request:
-  # Called by the release workflow once release-please has created a tag, since
-  # a tag pushed with GITHUB_TOKEN never triggers a workflow on its own.
-  workflow_call:
-    inputs:
-      ref:
-        description: Git ref to build. Defaults to the triggering ref.
-        type: string
-        required: false
-      version:
-        description: Release version, without the leading v. Publishes the semver and latest image tags.
-        type: string
-        required: false
 
 env:
   REGISTRY: ghcr.io
@@ -38,7 +30,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
           persist-credentials: false
 
       - name: Setup PHP
@@ -72,8 +63,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # The semver and latest tags only appear on a release call, so latest
-      # always points at the last release rather than the tip of main.
+      # The semver and latest tags only come from a v* tag, so latest always
+      # points at the last release rather than the tip of main.
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -81,17 +72,17 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: latest=false
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.version }},enable=${{ inputs.version != '' }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version }},enable=${{ inputs.version != '' }}
-            type=raw,value=latest,enable=${{ inputs.version != '' }}
-            type=ref,event=branch,enable=${{ inputs.version == '' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=ref,event=branch
             type=sha,format=short
           labels: |
             org.opencontainers.image.title=DoFit
             org.opencontainers.image.description=Track your trainings, activities and body metrics.
 
-      # Pull requests build the image to prove it still works, but only pushes
-      # to main publish it.
+      # Pull requests build the image to prove it still works; pushes to main
+      # and v* tags are the ones that publish it.
       - name: Build and push the image
         uses: docker/build-push-action@v6
         with:
