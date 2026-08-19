@@ -44,7 +44,23 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * A one-pixel JPEG, enough for the media library to work with.
+ */
+function jpegFixture(): string
 {
-    // ..
+    return base64_decode(
+        '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0a'
+        .'HBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAA'
+        .'AAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=='
+    );
+}
+
+/**
+ * A one-pixel GIF, enough for the media library to work with. The dataset
+ * ships an animation next to every thumbnail.
+ */
+function gifFixture(): string
+{
+    return base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
 }

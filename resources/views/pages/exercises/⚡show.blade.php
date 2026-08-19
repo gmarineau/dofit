@@ -187,12 +187,14 @@ new class extends Component
         </section>
     @endif
 
-    @if ($exercise->instructions !== [])
+    @php($instructionSteps = $exercise->instructionSteps())
+
+    @if ($instructionSteps !== [])
         <section>
             <x-section-heading icon="o-list-bullet">{{ __('Instructions') }}</x-section-heading>
 
             <ol>
-                @foreach ($exercise->instructions as $instruction)
+                @foreach ($instructionSteps as $instruction)
                     <li wire:key="step-{{ $loop->index }}" class="flex gap-3 border-b border-line py-3 last:border-0">
                         <span class="numeric w-5 shrink-0 text-sm font-bold text-ink-muted">{{ $loop->iteration }}</span>
                         <span class="text-sm font-semibold text-ink-soft">{{ $instruction }}</span>

@@ -17,6 +17,8 @@ use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\Translatable\Attributes\Translatable;
+use Spatie\Translatable\HasTranslations;
 
 /**
  * An exercise: either an entry from the shared library seeded from
@@ -35,7 +37,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $equipment
  * @property list<string> $primary_muscles
  * @property list<string> $secondary_muscles
- * @property list<string> $instructions
+ * @property list<string> $instructions The steps in the reader's language; go through instructionSteps().
  * @property list<string>|null $image_paths
  * @property-read Collection<int, Activity> $activities
  * @property-read Collection<int, User> $favoritedBy
@@ -45,12 +47,14 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
     'user_id', 'slug', 'name', 'category', 'level', 'force', 'mechanic', 'equipment',
     'primary_muscles', 'secondary_muscles', 'instructions', 'image_paths',
 ])]
+#[Translatable('instructions')]
 #[WithoutTimestamps]
 class Exercise extends Model implements HasMedia
 {
     /** @use HasFactory<ExerciseFactory> */
     use HasFactory;
 
+    use HasTranslations;
     use InteractsWithMedia;
     use Searchable;
 
@@ -87,18 +91,19 @@ class Exercise extends Model implements HasMedia
         return [
             'primary_muscles' => 'array',
             'secondary_muscles' => 'array',
-            'instructions' => 'array',
             'image_paths' => 'array',
         ];
     }
 
     /**
-     * Illustrations are fetched on demand by `dofit:fetch-exercise-images`.
+     * Illustrations are fetched on demand by the import commands. GIFs are
+     * accepted because exercises-dataset ships animations alongside its
+     * thumbnails.
      */
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection(self::ILLUSTRATIONS)
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp'])
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
             ->useDisk('public');
     }
 
@@ -121,6 +126,25 @@ class Exercise extends Model implements HasMedia
     public function hasIllustrations(): bool
     {
         return $this->getMedia(self::ILLUSTRATIONS)->isNotEmpty();
+    }
+
+    /**
+     * The instruction steps in the reader's language, falling back to the
+     * application locale when the exercise has not been translated.
+     *
+     * Always go through this rather than reading `instructions` straight:
+     * the trait hands back an empty string, not an empty list, for an
+     * exercise carrying no instructions at all — a custom one, typically.
+     *
+     * @return list<string>
+     */
+    public function instructionSteps(?string $locale = null): array
+    {
+        $steps = $locale === null
+            ? $this->instructions
+            : $this->getTranslation('instructions', $locale);
+
+        return is_array($steps) ? array_values($steps) : [];
     }
 
     /**

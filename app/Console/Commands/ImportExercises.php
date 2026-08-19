@@ -43,6 +43,11 @@ class ImportExercises extends Command
     protected const string IMAGE_URL = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
 
     /**
+     * What `exercises.source` is stamped with for the rows this command owns.
+     */
+    public const string SOURCE = 'free-exercise-db';
+
+    /**
      * Execute the console command.
      *
      * The library is optional: DoFit works with the exercise names people type
@@ -110,6 +115,7 @@ class ImportExercises extends Command
     {
         return [
             'slug' => Str::slug((string) $exercise['name']),
+            'source' => self::SOURCE,
             'name' => $exercise['name'],
             'category' => $exercise['category'] ?? null,
             'level' => $exercise['level'] ?? null,
@@ -118,13 +124,18 @@ class ImportExercises extends Command
             'equipment' => $exercise['equipment'] ?? null,
             'primary_muscles' => json_encode($exercise['primaryMuscles'] ?? []),
             'secondary_muscles' => json_encode($exercise['secondaryMuscles'] ?? []),
-            'instructions' => json_encode($exercise['instructions'] ?? []),
+            'instructions' => json_encode(['en' => $exercise['instructions'] ?? []]),
             'image_paths' => json_encode($exercise['images'] ?? []),
         ];
     }
 
     /**
      * Write the exercises, updating the ones already present.
+     *
+     * `instructions` is deliberately absent from the update list: an exercise
+     * this library shares with exercises-dataset also carries that import's
+     * French, and refreshing English text upstream never changes would drop it.
+     * New rows still get their instructions from the insert.
      *
      * @param  Collection<int, array<string, mixed>>  $exercises
      */
@@ -134,8 +145,8 @@ class ImportExercises extends Command
             $chunk->all(),
             uniqueBy: ['slug'],
             update: [
-                'name', 'category', 'level', 'force', 'mechanic', 'equipment',
-                'primary_muscles', 'secondary_muscles', 'instructions', 'image_paths',
+                'name', 'source', 'category', 'level', 'force', 'mechanic', 'equipment',
+                'primary_muscles', 'secondary_muscles', 'image_paths',
             ],
         ));
     }
@@ -170,6 +181,7 @@ class ImportExercises extends Command
         // Resolve the ids up front: chunked iteration would otherwise replace
         // the limit with its own paging.
         $ids = Exercise::query()
+            ->where('source', self::SOURCE)
             ->whereJsonLength('image_paths', '>', 0)
             ->when(! $this->option('force'), fn ($query) => $query->whereDoesntHave('media'))
             ->when($this->option('limit'), fn ($query, $limit) => $query->limit((int) $limit))

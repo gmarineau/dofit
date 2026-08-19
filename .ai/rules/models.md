@@ -16,3 +16,14 @@ Tests pin `SCOUT_DRIVER=collection` in phpunit.xml so they never reach a real en
 `activity_types` is gone: an exercise is either a shared library entry (`user_id` null) or one a user added (`user_id` set), in the single `exercises` table. Activities and program items carry `exercise_id`.
 Always scope reads with `availableTo($user)` — a library entry is everyone's, a custom one is its owner's alone. Anything per-user computed from a shared exercise (progression charts, "already logged") must filter through `activities.training.user_id`, since the exercise row itself is shared.
 Go through `ExerciseService::resolve()` to turn a picked id or typed name into an exercise: it reuses an existing name before creating a custom duplicate, and `createCustom()` assigns a slug that does not collide with the library's.
+
+## instructions est traduit, lire par instructionSteps()
+`instructions` est une colonne JSON traduite par spatie/laravel-translatable, déclarée via `#[Translatable('instructions')]`. Forme stockée : `{"en": ["…"], "fr": ["…"]}`. Les langues offertes sont celles de `config('dofit.locales')`.
+
+Ne pas remettre `'instructions' => 'array'` dans `casts()` : `initializeHasTranslations()` fait déjà `mergeCasts()` pour cet attribut.
+
+Toujours lire via `instructionSteps(?string $locale = null): array`, jamais `$exercise->instructions` directement. Le trait renvoie une **chaîne vide**, pas un tableau, pour un exo sans aucune instruction (typiquement un exo custom, créé avec `instructions => []`) — un `@foreach` dessus casse la page. `instructionSteps()` garantit une `list<string>`.
+
+Le fallback est implicite : `Translatable::$fallbackLocale` n'est pas initialisé, donc le package retombe sur `config('app.fallback_locale')` (`en`) via la sémantique `isset()` du `??`. Rien à configurer dans un service provider.
+
+Assigner une **liste** (`['Étape 1']`) écrit la locale courante ; assigner une **map** (`['fr' => [...]]`) remplace l'ensemble des traductions. C'est pour ça que les anciennes fixtures de test ont survécu sans modification.

@@ -1,20 +1,9 @@
 <?php
 
+use App\Console\Commands\ImportExercises;
 use App\Models\Exercise;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-
-/**
- * A one-pixel JPEG, enough for the media library to work with.
- */
-function jpegFixture(): string
-{
-    return base64_decode(
-        '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0a'
-        .'HBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAA'
-        .'AAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=='
-    );
-}
 
 /**
  * The upstream payload, in the shape free-exercise-db publishes.
@@ -84,6 +73,9 @@ it('imports the library without illustrations by default', function () {
     expect($exercise->name)->toBe('Barbell Bench Press')
         ->and($exercise->primary_muscles)->toBe(['chest'])
         ->and($exercise->equipment)->toBe('barbell')
+        ->and($exercise->source)->toBe(ImportExercises::SOURCE)
+        // This library is English throughout, so that is the language it lands in.
+        ->and($exercise->getTranslations('instructions'))->toBe(['en' => ['Lie on the bench.']])
         ->and($exercise->image_paths)->toHaveCount(2)
         ->and($exercise->hasIllustrations())->toBeFalse();
 });

@@ -108,6 +108,38 @@ it('shows an exercise with its muscles and instructions', function () {
         ->assertSee('Press the bar up.');
 });
 
+it('shows the instructions in the reader’s language', function () {
+    $exercise = libraryExercise([
+        'instructions' => ['en' => ['Press the bar up.'], 'fr' => ['Pousse la barre.']],
+    ]);
+
+    app()->setLocale('fr');
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.show', ['exercise' => $exercise])
+        ->assertSee('Pousse la barre.')
+        ->assertDontSee('Press the bar up.');
+});
+
+it('shows an exercise carrying no instructions at all', function () {
+    $exercise = libraryExercise(['instructions' => []]);
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.show', ['exercise' => $exercise])
+        ->assertSee($exercise->name);
+
+    expect($exercise->instructionSteps())->toBe([]);
+});
+
+it('falls back to the application language for a translation nobody wrote', function () {
+    $exercise = libraryExercise([
+        'instructions' => ['en' => ['Press the bar up.'], 'fr' => ['Pousse la barre.']],
+    ]);
+
+    expect($exercise->instructionSteps('fr'))->toBe(['Pousse la barre.'])
+        ->and($exercise->instructionSteps('de'))->toBe(['Press the bar up.']);
+});
+
 it('pins an exercise from its own page', function () {
     $exercise = libraryExercise();
 
