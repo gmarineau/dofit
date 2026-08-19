@@ -1,11 +1,13 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/blank-livewire-starter-kit",
+    "name": "gmarineau/dofit",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "A small, self-hosted fitness tracker: trainings, sets and body metrics.",
     "keywords": [
+        "fitness",
+        "self-hosted",
         "laravel",
-        "framework"
+        "livewire"
     ],
     "license": "MIT",
     "require": {

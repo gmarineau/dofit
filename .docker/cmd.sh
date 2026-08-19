@@ -10,6 +10,11 @@ role=${CONTAINER_ROLE:-app}
 
 case "$role" in
     app)
+        # The symlink is gitignored, so it is absent from the image: without
+        # this, everything on the `public` media disk answers 404.
+        echo " [-] Linking storage/app/public into the document root"
+        php artisan storage:link --force
+
         echo " [-] Container running as app"
         exec frankenphp run --config /etc/caddy/Caddyfile
         ;;
