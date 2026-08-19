@@ -373,6 +373,37 @@ it('narrows the library to the imported exercises', function () {
         ->assertDontSee('My Own Move');
 });
 
+it('still has the filters on when the list is opened again', function () {
+    libraryExercise(['name' => 'Imported Move', 'primary_muscles' => ['chest']]);
+    Exercise::factory()->ownedBy($this->user)->create(['name' => 'My Own Move']);
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.index')
+        ->set('term', 'Move')
+        ->call('filterMuscle', 'chest')
+        ->call('filterSource', 'imported');
+
+    // A fresh mount, as the chevron on an exercise page gives you.
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.index')
+        ->assertSet('term', 'Move')
+        ->assertSet('muscle', 'chest')
+        ->assertSet('source', 'imported')
+        ->assertSee('Imported Move')
+        ->assertDontSee('My Own Move');
+});
+
+it('forgets a filter that was toggled back off', function () {
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.index')
+        ->call('filterMuscle', 'chest')
+        ->call('filterMuscle', 'chest');
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.index')
+        ->assertSet('muscle', null);
+});
+
 it('drops the source filter when the same one is tapped again', function () {
     Exercise::factory()->ownedBy($this->user)->create(['name' => 'My Own Move']);
     libraryExercise(['name' => 'Imported Move']);
@@ -392,6 +423,22 @@ it('keeps the illustration disks readable without opening the generic one', func
         ->and(config('filesystems.disks.media.visibility'))->toBe('public')
         // `s3` is where anything else would land, so it stays private.
         ->and(config('filesystems.disks.s3'))->not->toHaveKey('visibility');
+});
+
+it('shows the illustrations at their own size rather than stretched to the column', function () {
+    Storage::fake(config('media-library.disk_name'));
+
+    $exercise = libraryExercise();
+
+    $exercise->addMediaFromString(jpegFixture())
+        ->usingFileName('bench-press-0.jpg')
+        ->toMediaCollection(Exercise::ILLUSTRATIONS);
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.show', ['exercise' => $exercise->fresh()])
+        // `w-full` upscales a 850px source into the column and it turns to mush.
+        ->assertSeeHtml('max-h-72 w-auto max-w-full')
+        ->assertDontSeeHtml('w-full rounded-2xl bg-raised object-cover');
 });
 
 it('stores the illustrations on the disk the configuration names', function () {

@@ -126,11 +126,14 @@ new class extends Component
     @if ($exercise->hasIllustrations())
         <div class="mb-8 grid gap-3 sm:grid-cols-2">
             @foreach ($exercise->getMedia(Exercise::ILLUSTRATIONS) as $illustration)
+                {{-- Never blown up past its own pixels: the sources top out
+                     around 850px wide, and stretched to the column they turn
+                     to mush. Down to the column, yes; up, never. --}}
                 <img
                     src="{{ $illustration->getUrl() }}"
                     alt="{{ $exercise->name }}"
                     loading="lazy"
-                    class="w-full rounded-2xl bg-raised object-cover"
+                    class="mx-auto max-h-72 w-auto max-w-full rounded-2xl bg-raised object-contain"
                 >
             @endforeach
         </div>

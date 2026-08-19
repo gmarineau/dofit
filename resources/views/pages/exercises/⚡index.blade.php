@@ -3,6 +3,7 @@
 use App\Models\Exercise;
 use App\Services\ExerciseService;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Session;
 use Livewire\Component;
 
 new class extends Component
@@ -12,16 +13,26 @@ new class extends Component
      */
     protected const int PAGE = 24;
 
+    /*
+     * The filters live in the session, not just in the component: opening an
+     * exercise and coming back through the header's chevron mounts a fresh
+     * list, and losing the selection there was the whole complaint. Each chip
+     * still toggles itself off, so nothing gets stuck on.
+     */
+    #[Session]
     public string $term = '';
 
+    #[Session]
     public ?string $muscle = null;
 
+    #[Session]
     public ?string $equipment = null;
 
     /**
      * Which slice of the library is on screen: favourites, the exercises the
      * user added, the imported ones, or everything.
      */
+    #[Session]
     public ?string $source = null;
 
     /**
