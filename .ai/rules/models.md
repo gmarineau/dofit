@@ -2,6 +2,7 @@
 paths:
   - app/Models/Exercise.php
   - 'app/Models/**'
+  - app/Models/User.php
 ---
 
 # Models
@@ -32,3 +33,10 @@ Assigner une **liste** (`['Étape 1']`) écrit la locale courante ; assigner une
 La collection `illustrations` n'appelle pas `useDisk()` : elle suit `media-library.disk_name`, qui vaut déjà `env('MEDIA_DISK', 'public')` dans la config du paquet. Ne pas remettre `useDisk('public')` en dur, et ne pas introduire de clé maison en doublon — `MEDIA_DISK=s3` suffit à tout basculer.
 Côté tests, faker le disque configuré : `Storage::fake(config('media-library.disk_name'))`, pas `Storage::fake('public')`.
 Les vues passent par `getUrl()` / `getFirstMediaUrl()`, donc rien à changer pour S3 tant que le disque a bien une `url` configurée.
+Pour partir sur S3 : `MEDIA_DISK=media`, pas `MEDIA_DISK=s3`. Le disque `media` est le même bucket sous le préfixe `AWS_MEDIA_PREFIX` mais en `'visibility' => 'public'` ; `s3` reste privé car c'est là qu'atterrirait tout le reste. Ne pas rendre `s3` public pour dépanner, ajouter le besoin au disque `media`.
+Attention aux ACL : si le bucket est en Object Ownership « bucket owner enforced » (défaut des buckets récents, R2, Scaleway…), la visibilité publique fait échouer chaque upload en `AccessControlListNotSupported` — retirer alors `visibility` du disque `media` et ouvrir la lecture du préfixe par bucket policy.
+
+## La taille vit sur le user, l'IMC est dérivé
+`users.height` est en **centimètres** (unsignedSmallInteger nullable), saisie sur `account.edit`, bornée 50–280 pour attraper les fautes de frappe.
+L'IMC n'est jamais stocké : `$user->bmi` (Attribute) le recalcule depuis `height` et `latestWeight()`, soit la dernière métrique `key = 'weight'`. Il vaut `null` tant que l'un des deux manque — toujours prévoir le `—` en vue.
+Une pesée reste une `Metric`, pas une colonne du user : c'est l'historique qui alimente les courbes du dashboard.

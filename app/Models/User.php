@@ -20,6 +20,7 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $name
  * @property Carbon|null $birthdate
+ * @property int|null $height
  * @property string $email
  * @property string|null $locale
  * @property Carbon|null $email_verified_at
@@ -28,18 +29,27 @@ use Illuminate\Support\Str;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $birthdate_formatted
+ * @property-read float|null $bmi
  * @property-read Collection<int, Training> $trainings
  * @property-read Collection<int, Exercise> $exercises
  * @property-read Collection<int, Exercise> $favoriteExercises
  * @property-read Collection<int, Metric> $metrics
  * @property-read Collection<int, Setting> $settings
  */
-#[Fillable(['name', 'birthdate', 'email', 'password', 'locale'])]
+#[Fillable(['name', 'birthdate', 'height', 'email', 'password', 'locale'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    /**
+     * The bounds of the healthy body mass index band, per the World Health
+     * Organization.
+     */
+    public const float BMI_HEALTHY_MIN = 18.5;
+
+    public const float BMI_HEALTHY_MAX = 25.0;
 
     /**
      * Get the attributes that should be cast.
@@ -50,6 +60,7 @@ class User extends Authenticatable
     {
         return [
             'birthdate' => 'datetime',
+            'height' => 'integer',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
@@ -75,6 +86,59 @@ class User extends Authenticatable
     protected function birthdateFormatted(): Attribute
     {
         return Attribute::get(fn (): string => $this->birthdate?->format(config('dofit.date_format')) ?? '');
+    }
+
+    /**
+     * The most recent weight measurement in kilograms, or null when the user
+     * has never recorded one.
+     */
+    public function latestWeight(): ?float
+    {
+        $value = $this->metrics()
+            ->where('key', 'weight')
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->value('value');
+
+        return $value === null ? null : (float) $value;
+    }
+
+    /**
+     * The body mass index, from the height on file and the latest weight, to
+     * one decimal. Null until both are known — the height is optional and a
+     * user may not have weighed themselves yet.
+     *
+     * Cached: reading it costs a query, and a page shows it more than once.
+     *
+     * @return Attribute<float|null, never>
+     */
+    protected function bmi(): Attribute
+    {
+        return Attribute::get(function (): ?float {
+            $weight = $this->latestWeight();
+
+            if ($this->height === null || $this->height <= 0 || $weight === null) {
+                return null;
+            }
+
+            return round($weight / (($this->height / 100) ** 2), 1);
+        })->shouldCache();
+    }
+
+    /**
+     * Whether the body mass index sits in the band the World Health
+     * Organization calls healthy. Null when the index is unknown, so the view
+     * can tell "outside the band" from "nothing to say".
+     */
+    public function hasHealthyBmi(): ?bool
+    {
+        $bmi = $this->bmi;
+
+        if ($bmi === null) {
+            return null;
+        }
+
+        return $bmi >= self::BMI_HEALTHY_MIN && $bmi < self::BMI_HEALTHY_MAX;
     }
 
     /**

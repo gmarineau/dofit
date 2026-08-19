@@ -11,6 +11,8 @@ new class extends Component
 
     public ?string $birthdate = null;
 
+    public ?int $height = null;
+
     public string $locale = '';
 
     /**
@@ -23,6 +25,7 @@ new class extends Component
         $this->name = $user->name;
         $this->email = $user->email;
         $this->birthdate = $user->birthdate?->format('Y-m-d');
+        $this->height = $user->height;
         $this->locale = $user->locale ?? config('app.locale');
     }
 
@@ -37,6 +40,8 @@ new class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore(auth()->id())],
             'birthdate' => ['nullable', 'date'],
+            // Centimetres, wide enough for anyone without accepting a typo.
+            'height' => ['nullable', 'integer', 'min:50', 'max:280'],
             'locale' => ['required', 'string', Rule::in(array_keys(config('dofit.locales')))],
         ];
     }
@@ -100,6 +105,10 @@ new class extends Component
 
         <x-field :label="__('Birthdate')" for="birthdate" :error="$errors->first('birthdate')">
             <x-input id="birthdate" type="date" wire:model="birthdate" :invalid="$errors->has('birthdate')" />
+        </x-field>
+
+        <x-field :label="__('Height (cm)')" for="height" :error="$errors->first('height')">
+            <x-input id="height" type="number" inputmode="numeric" wire:model="height" :invalid="$errors->has('height')" autocomplete="off" />
         </x-field>
 
         <div class="flex items-center gap-3 pt-2">

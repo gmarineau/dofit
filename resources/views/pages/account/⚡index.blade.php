@@ -55,6 +55,21 @@ new class extends Component
         </div>
 
         <div class="flex items-center justify-between gap-4 border-b border-line py-4">
+            <span class="text-sm font-semibold text-ink-soft">{{ __('Height') }}</span>
+            <span class="numeric text-sm font-bold text-ink">{{ $user->height ? $user->height.' '.__('cm') : '—' }}</span>
+        </div>
+
+        <div class="flex items-center justify-between gap-4 border-b border-line py-4">
+            <span class="text-sm font-semibold text-ink-soft">{{ __('BMI') }}</span>
+            <span @class([
+                'numeric text-sm font-bold',
+                'text-success' => $user->hasHealthyBmi() === true,
+                'text-warm' => $user->hasHealthyBmi() === false,
+                'text-ink' => $user->hasHealthyBmi() === null,
+            ])>{{ $user->bmi ?? '—' }}</span>
+        </div>
+
+        <div class="flex items-center justify-between gap-4 border-b border-line py-4">
             <span class="text-sm font-semibold text-ink-soft">{{ __('Language') }}</span>
             <span class="text-sm font-bold text-ink">{{ config('dofit.locales')[app()->getLocale()] ?? app()->getLocale() }}</span>
         </div>

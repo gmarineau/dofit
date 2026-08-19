@@ -11,8 +11,9 @@
 |--------------------------------------------------------------------------
 | The interface sits on neutral grey and carries two hues. Blue marks what is
 | active, what is a primary action, and what carries data. Terracotta marks a
-| movement the user earned: a trend, a personal record. Red appears solely on
-| destructive actions. Nothing else gets a hue.
+| movement the user earned: a trend, a personal record. Green reads a health
+| figure as being where it should be, and terracotta reads it as being outside
+| that band. Red appears solely on destructive actions. Nothing else gets a hue.
 */
 
 @theme {
@@ -52,6 +53,7 @@
     --color-bar: var(--ui-bar);
     --color-bar-fade: var(--ui-bar-fade);
     --color-warm: var(--ui-warm);
+    --color-success: var(--ui-success);
     --color-danger: var(--ui-danger);
     --color-danger-soft: var(--ui-danger-soft);
 
@@ -78,6 +80,7 @@
     --ui-bar: #d3e2ee;
     --ui-bar-fade: #e6eef4;
     --ui-warm: #b0603a;
+    --ui-success: #2f7d54;
     --ui-danger: #d94055;
     --ui-danger-soft: #fdecef;
 }
@@ -101,6 +104,7 @@
     --ui-bar: #2f3d47;
     --ui-bar-fade: #262e35;
     --ui-warm: #e09268;
+    --ui-success: #74c48d;
     --ui-danger: #f2887b;
     --ui-danger-soft: #3a201b;
 }

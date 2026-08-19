@@ -387,6 +387,13 @@ it('drops the source filter when the same one is tapped again', function () {
         ->assertSee('Imported Move');
 });
 
+it('keeps the illustration disks readable without opening the generic one', function () {
+    expect(config('filesystems.disks.public.visibility'))->toBe('public')
+        ->and(config('filesystems.disks.media.visibility'))->toBe('public')
+        // `s3` is where anything else would land, so it stays private.
+        ->and(config('filesystems.disks.s3'))->not->toHaveKey('visibility');
+});
+
 it('stores the illustrations on the disk the configuration names', function () {
     config()->set('media-library.disk_name', 's3');
     Storage::fake('s3');

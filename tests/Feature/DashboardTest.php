@@ -225,3 +225,27 @@ it('switches the chart between volume and sessions', function () {
         ->set('metric', 'sessions')
         ->assertSee(__('Last :count weeks · sessions', ['count' => DashboardService::CHART_WEEKS]));
 });
+
+it('reads the bmi next to the weight curve', function () {
+    $this->user->update(['height' => 180]);
+
+    // 75 kg for 1.80 m, a figure no other tile on the page shows.
+    Metric::factory()->for($this->user)->create(['value' => '75', 'date' => now()]);
+
+    Livewire::actingAs($this->user->fresh())
+        ->test('pages::dashboard')
+        ->assertSee('23.1')
+        ->assertDontSee(__('Add your height'));
+});
+
+it('points at whichever half of the bmi is missing', function () {
+    Livewire::actingAs($this->user)
+        ->test('pages::dashboard')
+        ->assertSee(__('Add your height'));
+
+    $this->user->update(['height' => 180]);
+
+    Livewire::actingAs($this->user->fresh())
+        ->test('pages::dashboard')
+        ->assertSee(__('Log a weight'));
+});

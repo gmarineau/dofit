@@ -125,6 +125,10 @@ new class extends Component
 
     $trend = $this->summary['volume_change'];
 
+    $bmi = auth()->user()->bmi;
+
+    $bmiHealthy = auth()->user()->hasHealthyBmi();
+
     $delta = $this->week['done'] - $this->week['previous'];
 
     $weekNote = trans_choice('{0}session done|{1}session done|[2,*]sessions done', $this->week['done']).', '.match (true) {
@@ -279,6 +283,31 @@ new class extends Component
                     :datasets="[['label' => __('Weight'), 'data' => $this->weight['values']]]"
                     height="h-40"
                 />
+
+                {{-- The curve says where the weight goes, the index says what it means. --}}
+                <div class="mt-4 flex items-baseline justify-between gap-3 border-t border-line-soft pt-4">
+                    <span class="text-[13.5px] font-semibold text-ink-soft">{{ __('BMI') }}</span>
+
+                    @if ($bmi !== null)
+                        {{-- Green inside the healthy band, terracotta outside; red stays destructive. --}}
+                        <span @class([
+                            'numeric text-[22px] leading-none font-extrabold tracking-[-0.03em]',
+                            'text-success' => $bmiHealthy,
+                            'text-warm' => ! $bmiHealthy,
+                        ])>{{ $bmi }}</span>
+                    @else
+                        {{-- Point at whichever half is missing. --}}
+                        @php($missingHeight = auth()->user()->height === null)
+
+                        <a
+                            href="{{ $missingHeight ? route('account.edit') : route('metrics.create') }}"
+                            wire:navigate
+                            class="text-[13.5px] font-bold text-accent"
+                        >
+                            {{ $missingHeight ? __('Add your height') : __('Log a weight') }}
+                        </a>
+                    @endif
+                </div>
             </x-card>
         </div>
     </div>

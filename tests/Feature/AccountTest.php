@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Metric;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -38,6 +39,99 @@ it('updates the account details', function () {
     expect($this->user->name)->toBe('Gregory')
         ->and($this->user->email)->toBe('gregory@example.com')
         ->and($this->user->birthdate->format('Y-m-d'))->toBe('1990-01-01');
+});
+
+it('records the height and reads the bmi off the latest weight', function () {
+    $this->user->update(['height' => 180]);
+
+    Metric::factory()->for($this->user)->create(['value' => '90', 'date' => now()->subMonth()]);
+    Metric::factory()->for($this->user)->create(['value' => '81', 'date' => now()]);
+
+    // 81 kg for 1.80 m.
+    expect($this->user->fresh()->bmi)->toBe(25.0);
+
+    Livewire::actingAs($this->user->fresh())
+        ->test('pages::account.index')
+        ->assertSee('180')
+        ->assertSee('25');
+});
+
+it('leaves the bmi empty until both the height and a weight are known', function () {
+    expect($this->user->bmi)->toBeNull();
+
+    $this->user->update(['height' => 180]);
+
+    // A height on its own is not enough.
+    expect($this->user->fresh()->bmi)->toBeNull();
+
+    Metric::factory()->for($this->user)->create(['value' => '81', 'date' => now()]);
+
+    expect($this->user->fresh()->bmi)->toBe(25.0);
+});
+
+it('warms up the bmi once it leaves the healthy band', function () {
+    $this->user->update(['height' => 180]);
+
+    // 75 kg for 1.80 m sits inside the band, 95 kg does not.
+    $healthy = Metric::factory()->for($this->user)->create(['value' => '75', 'date' => now()]);
+
+    expect($this->user->fresh()->hasHealthyBmi())->toBeTrue();
+
+    Livewire::actingAs($this->user->fresh())
+        ->test('pages::account.index')
+        ->assertSeeHtml('text-success')
+        ->assertDontSeeHtml('text-warm');
+
+    $healthy->update(['value' => '95']);
+
+    expect($this->user->fresh()->hasHealthyBmi())->toBeFalse();
+
+    Livewire::actingAs($this->user->fresh())
+        ->test('pages::account.index')
+        ->assertSeeHtml('text-warm')
+        ->assertDontSeeHtml('text-success');
+});
+
+it('says nothing about a bmi it cannot work out', function () {
+    expect($this->user->hasHealthyBmi())->toBeNull();
+
+    Livewire::actingAs($this->user)
+        ->test('pages::account.index')
+        ->assertDontSeeHtml('text-warm')
+        ->assertDontSeeHtml('text-success');
+});
+
+it('updates the height from the edit form', function () {
+    Livewire::actingAs($this->user)
+        ->test('pages::account.edit')
+        ->assertSet('height', null)
+        ->set('height', 178)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($this->user->fresh()->height)->toBe(178);
+});
+
+it('rejects a height that cannot be a person', function () {
+    Livewire::actingAs($this->user)
+        ->test('pages::account.edit')
+        ->set('height', 1780)
+        ->call('save')
+        ->assertHasErrors(['height']);
+
+    expect($this->user->fresh()->height)->toBeNull();
+});
+
+it('accepts an empty height', function () {
+    $this->user->update(['height' => 178]);
+
+    Livewire::actingAs($this->user->fresh())
+        ->test('pages::account.edit')
+        ->set('height', null)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($this->user->fresh()->height)->toBeNull();
 });
 
 it('lets the user keep their own email address', function () {
