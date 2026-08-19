@@ -288,14 +288,17 @@ class ImportExercisesDataset extends Command
      */
     protected function muscles(array $names): array
     {
-        return collect($names)
-            ->filter(fn (mixed $name): bool => filled($name))
-            ->map(fn (mixed $name): string => Str::lower(trim((string) $name)))
-            ->map(fn (string $name): string => self::MUSCLE_ALIASES[$name] ?? $name)
-            ->filter(fn (string $name): bool => in_array($name, self::MUSCLES, true))
-            ->unique()
-            ->values()
-            ->all();
+        // array_values() rather than the collection's values(): it is the same
+        // reindexing, but the only one static analysis accepts as a list.
+        return array_values(
+            collect($names)
+                ->filter(fn (mixed $name): bool => filled($name))
+                ->map(fn (mixed $name): string => Str::lower(trim((string) $name)))
+                ->map(fn (string $name): string => self::MUSCLE_ALIASES[$name] ?? $name)
+                ->filter(fn (string $name): bool => in_array($name, self::MUSCLES, true))
+                ->unique()
+                ->all()
+        );
     }
 
     /**

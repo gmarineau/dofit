@@ -66,7 +66,7 @@ new class extends Component
                 'text-success' => $user->hasHealthyBmi() === true,
                 'text-warm' => $user->hasHealthyBmi() === false,
                 'text-ink' => $user->hasHealthyBmi() === null,
-            ])>{{ $user->bmi ?? '—' }}</span>
+            ])>{{ $user->bmi() ?? '—' }}</span>
         </div>
 
         <div class="flex items-center justify-between gap-4 border-b border-line py-4">

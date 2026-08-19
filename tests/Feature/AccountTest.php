@@ -48,7 +48,7 @@ it('records the height and reads the bmi off the latest weight', function () {
     Metric::factory()->for($this->user)->create(['value' => '81', 'date' => now()]);
 
     // 81 kg for 1.80 m.
-    expect($this->user->fresh()->bmi)->toBe(25.0);
+    expect($this->user->fresh()->bmi())->toBe(25.0);
 
     Livewire::actingAs($this->user->fresh())
         ->test('pages::account.index')
@@ -57,16 +57,16 @@ it('records the height and reads the bmi off the latest weight', function () {
 });
 
 it('leaves the bmi empty until both the height and a weight are known', function () {
-    expect($this->user->bmi)->toBeNull();
+    expect($this->user->bmi())->toBeNull();
 
     $this->user->update(['height' => 180]);
 
     // A height on its own is not enough.
-    expect($this->user->fresh()->bmi)->toBeNull();
+    expect($this->user->fresh()->bmi())->toBeNull();
 
     Metric::factory()->for($this->user)->create(['value' => '81', 'date' => now()]);
 
-    expect($this->user->fresh()->bmi)->toBe(25.0);
+    expect($this->user->fresh()->bmi())->toBe(25.0);
 });
 
 it('warms up the bmi once it leaves the healthy band', function () {

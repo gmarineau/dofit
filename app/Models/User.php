@@ -29,7 +29,6 @@ use Illuminate\Support\Str;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $birthdate_formatted
- * @property-read float|null $bmi
  * @property-read Collection<int, Training> $trainings
  * @property-read Collection<int, Exercise> $exercises
  * @property-read Collection<int, Exercise> $favoriteExercises
@@ -50,6 +49,11 @@ class User extends Authenticatable
     public const float BMI_HEALTHY_MIN = 18.5;
 
     public const float BMI_HEALTHY_MAX = 25.0;
+
+    /**
+     * The memoised body mass index; `false` until it has been worked out.
+     */
+    private float|false|null $bmi = false;
 
     /**
      * Get the attributes that should be cast.
@@ -108,21 +112,23 @@ class User extends Authenticatable
      * one decimal. Null until both are known — the height is optional and a
      * user may not have weighed themselves yet.
      *
-     * Cached: reading it costs a query, and a page shows it more than once.
-     *
-     * @return Attribute<float|null, never>
+     * A method rather than an accessor: it runs a query, and a page reads it
+     * twice, so the result is memoised for the life of the instance. `false`
+     * is the "not worked out yet" marker, since null is a real answer.
      */
-    protected function bmi(): Attribute
+    public function bmi(): ?float
     {
-        return Attribute::get(function (): ?float {
-            $weight = $this->latestWeight();
+        if ($this->bmi !== false) {
+            return $this->bmi;
+        }
 
-            if ($this->height === null || $this->height <= 0 || $weight === null) {
-                return null;
-            }
+        $weight = $this->latestWeight();
 
-            return round($weight / (($this->height / 100) ** 2), 1);
-        })->shouldCache();
+        if ($this->height === null || $this->height <= 0 || $weight === null) {
+            return $this->bmi = null;
+        }
+
+        return $this->bmi = round($weight / (($this->height / 100) ** 2), 1);
     }
 
     /**
@@ -132,7 +138,7 @@ class User extends Authenticatable
      */
     public function hasHealthyBmi(): ?bool
     {
-        $bmi = $this->bmi;
+        $bmi = $this->bmi();
 
         if ($bmi === null) {
             return null;

@@ -37,13 +37,13 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
+        // Length first, composition never: forcing a symbol and a digit buys
+        // less than one more word does, and pushes people towards P@ssw0rd!.
+        // The breach check stays — it is the rule that actually rejects the
+        // passwords people lose. It passes when the API cannot be reached, so
+        // an offline instance is not locked out.
         Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
+            ? Password::min(10)->uncompromised()
             : null,
         );
     }

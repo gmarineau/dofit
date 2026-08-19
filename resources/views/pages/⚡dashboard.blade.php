@@ -125,7 +125,7 @@ new class extends Component
 
     $trend = $this->summary['volume_change'];
 
-    $bmi = auth()->user()->bmi;
+    $bmi = auth()->user()->bmi();
 
     $bmiHealthy = auth()->user()->hasHealthyBmi();
 
