@@ -11,7 +11,9 @@
 .gitignore
 .mcp.json
 .npmrc
+.release-please-manifest.json
 AGENTS.md
+CHANGELOG.md
 CLAUDE.md
 auth.json
 boost.json
@@ -22,6 +24,7 @@ phpstan.neon
 phpunit.xml
 pint.json
 public/hot
+release-please-config.json
 storage/logs/*
 tests/
 vite.config.js
