@@ -88,6 +88,10 @@ services:
     env_file: .env
     environment:
       CONTAINER_ROLE: queue
+    # The image's healthcheck curls the web server, which this role does not
+    # run — without this the container reports unhealthy forever.
+    healthcheck:
+      disable: true
     volumes:
       - storage:/app/storage
     depends_on:
@@ -102,6 +106,8 @@ services:
     env_file: .env
     environment:
       CONTAINER_ROLE: scheduler
+    healthcheck:
+      disable: true
     volumes:
       - storage:/app/storage
     depends_on:
