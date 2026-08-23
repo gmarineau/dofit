@@ -10,5 +10,6 @@ Before planning or editing, find the row whose globs match the file's path and r
 | resources/views/layouts/** | .ai/rules/layouts.md |
 | app/Models/Exercise.php, app/Models/**, app/Models/User.php | .ai/rules/models.md |
 | resources/views/pages/** | .ai/rules/pages.md |
+| app/Services/MediaPathGenerator.php | .ai/rules/services.md |
 | resources/views/** | .ai/rules/views.md |
 | .github/workflows/** | .ai/rules/workflows.md |

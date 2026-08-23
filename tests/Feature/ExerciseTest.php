@@ -455,5 +455,25 @@ it('stores the illustrations on the disk the configuration names', function () {
 
     expect($illustration->disk)->toBe('s3');
 
-    Storage::disk('s3')->assertExists("{$illustration->id}/bench-press-0.jpg");
+    Storage::disk('s3')->assertExists("exercises/{$exercise->id}/{$illustration->id}/bench-press-0.jpg");
+});
+
+it('files the illustrations under the exercise they belong to', function () {
+    Storage::fake(config('media-library.disk_name'));
+
+    $exercise = libraryExercise();
+
+    $exercise->addMediaFromString(jpegFixture())
+        ->usingFileName('bench-press-0.jpg')
+        ->toMediaCollection(Exercise::ILLUSTRATIONS);
+
+    $illustration = $exercise->getFirstMedia(Exercise::ILLUSTRATIONS);
+    $disk = Storage::disk(config('media-library.disk_name'));
+
+    // The media id stays the last segment: two files of one exercise may share
+    // a name, and deleting one must never take the other with it.
+    $disk->assertExists("exercises/{$exercise->id}/{$illustration->id}/bench-press-0.jpg");
+    $disk->assertExists("exercises/{$exercise->id}/{$illustration->id}/conversions/bench-press-0-thumb.jpg");
+
+    expect($illustration->getUrl())->toContain("exercises/{$exercise->id}/{$illustration->id}/bench-press-0.jpg");
 });
