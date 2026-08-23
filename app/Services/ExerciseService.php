@@ -24,6 +24,13 @@ class ExerciseService
     protected const int CHART_LENGTH = 10;
 
     /**
+     * Where the library filters are kept. The index writes them through
+     * `#[Session]`; a detail page reads them back to walk the same list the
+     * user is looking at rather than the raw library.
+     */
+    public const string FILTER_KEY = 'exercises.filters.';
+
+    /**
      * Narrow the library by whatever the user typed. The search engine handles
      * typos and the French vocabulary through its synonyms; a plain name match
      * takes over when the engine cannot be reached, so a search never takes
@@ -45,6 +52,86 @@ class ExerciseService
         }
 
         return $this->inHitOrder($query->whereKey($hits), $hits);
+    }
+
+    /**
+     * The library narrowed by whatever the user is filtering on, in the order
+     * the index lists it: the engine's ranking first when something is typed,
+     * alphabetical otherwise. Both the list and the previous/next links on a
+     * detail page go through here, so they can never disagree.
+     *
+     * @param  array{term?: string|null, muscle?: string|null, equipment?: string|null, source?: string|null}  $filters
+     * @return Builder<Exercise>
+     */
+    public function library(User $user, array $filters): Builder
+    {
+        $source = $filters['source'] ?? null;
+
+        return $this
+            ->applyTerm(Exercise::query()->availableTo($user), $filters['term'] ?? null)
+            ->forMuscle($filters['muscle'] ?? null)
+            ->withEquipment($filters['equipment'] ?? null)
+            ->when($source === 'favorites', fn (Builder $query) => $query->favoritedBy($user))
+            ->when($source === 'custom', fn (Builder $query) => $query->custom())
+            ->when($source === 'imported', fn (Builder $query) => $query->imported())
+            ->orderBy('name');
+    }
+
+    /**
+     * The filters the user last set on the index.
+     *
+     * @return array{term: string|null, muscle: string|null, equipment: string|null, source: string|null}
+     */
+    public function sessionFilters(): array
+    {
+        return [
+            'term' => session(self::FILTER_KEY.'term'),
+            'muscle' => session(self::FILTER_KEY.'muscle'),
+            'equipment' => session(self::FILTER_KEY.'equipment'),
+            'source' => session(self::FILTER_KEY.'source'),
+        ];
+    }
+
+    /**
+     * The exercises sitting either side of this one, so a detail page can step
+     * through the library without bouncing off the list every time.
+     *
+     * The whole id list is pulled rather than compared on the name: with a
+     * search term the order is the engine's ranking, which no `where name >`
+     * can reproduce. It is one column of at most a few hundred rows.
+     *
+     * @param  array{term?: string|null, muscle?: string|null, equipment?: string|null, source?: string|null}  $filters
+     * @return array{previous: Exercise|null, next: Exercise|null}
+     */
+    public function neighbours(Exercise $exercise, User $user, array $filters): array
+    {
+        $ids = $this->orderedIds($user, $filters);
+        $position = array_search($exercise->id, $ids, true);
+
+        if ($position === false) {
+            // Opened from outside the list — a link straight to it, or a
+            // filter it has since fallen out of. Walking the whole library
+            // beats dropping the links.
+            $ids = $this->orderedIds($user, []);
+            $position = array_search($exercise->id, $ids, true);
+        }
+
+        if ($position === false) {
+            return ['previous' => null, 'next' => null];
+        }
+
+        $previous = $position > 0 ? $ids[$position - 1] : null;
+        $next = $ids[$position + 1] ?? null;
+
+        $neighbours = Exercise::query()
+            ->whereKey(array_values(array_filter([$previous, $next])))
+            ->get()
+            ->keyBy('id');
+
+        return [
+            'previous' => $previous === null ? null : $neighbours->get($previous),
+            'next' => $next === null ? null : $neighbours->get($next),
+        ];
     }
 
     /**
@@ -127,6 +214,22 @@ class ExerciseService
             'repetition' => array_values($sequences->map(fn (Sequence $sequence): int => $sequence->repetition)->all()),
             'weight' => array_values($sequences->map(fn (Sequence $sequence): float => $sequence->weight ?? 0.0)->all()),
         ];
+    }
+
+    /**
+     * The ids of the filtered library, in the order it is listed.
+     *
+     * @param  array{term?: string|null, muscle?: string|null, equipment?: string|null, source?: string|null}  $filters
+     * @return list<int>
+     */
+    private function orderedIds(User $user, array $filters): array
+    {
+        return array_values(
+            $this->library($user, $filters)
+                ->pluck('id')
+                ->map(fn (mixed $id): int => (int) $id)
+                ->all(),
+        );
     }
 
     /**

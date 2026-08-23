@@ -55,6 +55,21 @@ new class extends Component
     }
 
     /**
+     * The exercises either side of this one, so the library can be walked from
+     * here. They follow the filters the index is left on, not the raw library:
+     * someone stepping through "chest, dumbbell" stays inside that list.
+     *
+     * @return array{previous: Exercise|null, next: Exercise|null}
+     */
+    #[Computed]
+    public function neighbours(): array
+    {
+        $exercises = app(ExerciseService::class);
+
+        return $exercises->neighbours($this->exercise, auth()->user(), $exercises->sessionFilters());
+    }
+
+    /**
      * Ask the user to confirm deleting their own exercise.
      */
     public function confirmDelete(): void
@@ -205,6 +220,46 @@ new class extends Component
                 @endforeach
             </ol>
         </section>
+    @endif
+
+    @php($previous = $this->neighbours['previous'])
+    @php($next = $this->neighbours['next'])
+
+    @if ($previous || $next)
+        {{-- Stepping to the neighbour beats going back to the list and finding
+             one's place in it again. Both sides keep their half of the row on
+             desktop, so "next" never slides under the back chevron. --}}
+        <nav class="mt-10 grid gap-3 border-t border-line pt-6 sm:grid-cols-2" aria-label="{{ __('Browse the library') }}">
+            @if ($previous)
+                <a
+                    href="{{ route('exercises.show', $previous) }}"
+                    wire:navigate
+                    class="flex min-w-0 items-center gap-3 rounded-2xl bg-raised px-4 py-3 transition hover:bg-accent-soft"
+                >
+                    <x-heroicon-o-chevron-left class="size-5 shrink-0 text-ink-muted" />
+
+                    <span class="min-w-0">
+                        <span class="block text-[11.5px] font-bold tracking-[0.09em] text-ink-muted uppercase">{{ __('Previous') }}</span>
+                        <span class="block truncate font-bold text-ink">{{ $previous->name }}</span>
+                    </span>
+                </a>
+            @endif
+
+            @if ($next)
+                <a
+                    href="{{ route('exercises.show', $next) }}"
+                    wire:navigate
+                    class="flex min-w-0 items-center justify-end gap-3 rounded-2xl bg-raised px-4 py-3 text-right transition hover:bg-accent-soft sm:col-start-2"
+                >
+                    <span class="min-w-0">
+                        <span class="block text-[11.5px] font-bold tracking-[0.09em] text-ink-muted uppercase">{{ __('Next') }}</span>
+                        <span class="block truncate font-bold text-ink">{{ $next->name }}</span>
+                    </span>
+
+                    <x-heroicon-o-chevron-right class="size-5 shrink-0 text-ink-muted" />
+                </a>
+            @endif
+        </nav>
     @endif
 
     <x-confirm-delete

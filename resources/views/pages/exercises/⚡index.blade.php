@@ -19,20 +19,20 @@ new class extends Component
      * list, and losing the selection there was the whole complaint. Each chip
      * still toggles itself off, so nothing gets stuck on.
      */
-    #[Session]
+    #[Session(key: ExerciseService::FILTER_KEY.'term')]
     public string $term = '';
 
-    #[Session]
+    #[Session(key: ExerciseService::FILTER_KEY.'muscle')]
     public ?string $muscle = null;
 
-    #[Session]
+    #[Session(key: ExerciseService::FILTER_KEY.'equipment')]
     public ?string $equipment = null;
 
     /**
      * Which slice of the library is on screen: favourites, the exercises the
      * user added, the imported ones, or everything.
      */
-    #[Session]
+    #[Session(key: ExerciseService::FILTER_KEY.'source')]
     public ?string $source = null;
 
     /**
@@ -51,7 +51,6 @@ new class extends Component
     {
         return $this->query()
             ->with('media')
-            ->orderBy('name')
             ->limit($this->shown)
             ->get();
     }
@@ -77,21 +76,20 @@ new class extends Component
     }
 
     /**
-     * The library narrowed by whatever the user is filtering on.
+     * The library narrowed by whatever the user is filtering on, already
+     * ordered. It is built by the service so that the previous/next links on a
+     * detail page walk exactly this list.
      *
      * @return \Illuminate\Database\Eloquent\Builder<Exercise>
      */
     private function query()
     {
-        $query = app(ExerciseService::class)
-            ->applyTerm(Exercise::query()->availableTo(auth()->user()), $this->term);
-
-        return $query
-            ->forMuscle($this->muscle)
-            ->withEquipment($this->equipment)
-            ->when($this->source === 'favorites', fn ($query) => $query->favoritedBy(auth()->user()))
-            ->when($this->source === 'custom', fn ($query) => $query->custom())
-            ->when($this->source === 'imported', fn ($query) => $query->imported());
+        return app(ExerciseService::class)->library(auth()->user(), [
+            'term' => $this->term,
+            'muscle' => $this->muscle,
+            'equipment' => $this->equipment,
+            'source' => $this->source,
+        ]);
     }
 
     /**

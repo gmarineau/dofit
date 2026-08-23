@@ -477,3 +477,62 @@ it('files the illustrations under the exercise they belong to', function () {
 
     expect($illustration->getUrl())->toContain("exercises/{$exercise->id}/{$illustration->id}/bench-press-0.jpg");
 });
+
+it('steps to the exercises sitting either side in the library', function () {
+    $bench = libraryExercise(['name' => 'Bench Press']);
+    $deadlift = libraryExercise(['name' => 'Deadlift']);
+    $squat = libraryExercise(['name' => 'Squat']);
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.show', ['exercise' => $deadlift])
+        ->assertSeeHtml(route('exercises.show', $bench))
+        ->assertSee('Bench Press')
+        ->assertSeeHtml(route('exercises.show', $squat))
+        ->assertSee('Squat');
+});
+
+it('offers no previous link on the first exercise and no next on the last', function () {
+    $bench = libraryExercise(['name' => 'Bench Press']);
+    $squat = libraryExercise(['name' => 'Squat']);
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.show', ['exercise' => $bench])
+        ->assertDontSee(__('Previous'))
+        ->assertSee(__('Next'));
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.show', ['exercise' => $squat])
+        ->assertSee(__('Previous'))
+        ->assertDontSee(__('Next'));
+});
+
+it('walks the list the filters left behind rather than the whole library', function () {
+    $bench = libraryExercise(['name' => 'Bench Press', 'primary_muscles' => ['chest']]);
+    libraryExercise(['name' => 'Curl', 'primary_muscles' => ['biceps'], 'secondary_muscles' => []]);
+    libraryExercise(['name' => 'Flyes', 'primary_muscles' => ['chest'], 'secondary_muscles' => []]);
+
+    // Whatever the index writes to the session is what the detail page reads.
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.index')
+        ->call('filterMuscle', 'chest');
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.show', ['exercise' => $bench])
+        ->assertSee('Flyes')
+        ->assertDontSee('Curl');
+});
+
+it('keeps the links when the exercise falls outside the filtered list', function () {
+    $bench = libraryExercise(['name' => 'Bench Press']);
+    libraryExercise(['name' => 'Squat']);
+
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.index')
+        ->call('filterSource', 'custom');
+
+    // Bench Press is not one of the user's own, so the filtered list does not
+    // hold it — the whole library takes over instead of dropping the links.
+    Livewire::actingAs($this->user)
+        ->test('pages::exercises.show', ['exercise' => $bench])
+        ->assertSee('Squat');
+});
