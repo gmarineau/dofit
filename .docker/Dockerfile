@@ -27,6 +27,7 @@ RUN apk add --no-cache curl
 # PHP image already.
 RUN install-php-extensions \
         gd \
+        intl \
         opcache \
         pcntl \
         pdo_mysql \
