@@ -43,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
         // passwords people lose. It passes when the API cannot be reached, so
         // an offline instance is not locked out.
         Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(10)->uncompromised()
+            ? Password::min(8)->uncompromised()
             : null,
         );
     }
