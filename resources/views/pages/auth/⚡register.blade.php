@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Services\UserSetupService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -80,7 +81,12 @@ new #[Layout('layouts::guest')] class extends Component
             <x-input id="email" type="email" wire:model="email" :invalid="$errors->has('email')" autocomplete="username" required />
         </x-field>
 
-        <x-field :label="__('Password')" for="password" :error="$errors->first('password')">
+        <x-field
+            :label="__('Password')"
+            for="password"
+            :error="$errors->first('password')"
+            :hint="__('At least :count characters.', ['count' => AppServiceProvider::PASSWORD_MIN_LENGTH])"
+        >
             <x-input id="password" type="password" wire:model="password" :invalid="$errors->has('password')" autocomplete="new-password" required />
         </x-field>
 

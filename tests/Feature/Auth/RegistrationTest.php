@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Services\UserSetupService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
@@ -62,6 +63,11 @@ it('rejects a password that is not confirmed', function () {
         ->set('password_confirmation', 'something-else')
         ->call('register')
         ->assertHasErrors(['password' => 'confirmed']);
+});
+
+it('tells the visitor how long the password has to be', function () {
+    Livewire::test('pages::auth.register')
+        ->assertSee(__('At least :count characters.', ['count' => AppServiceProvider::PASSWORD_MIN_LENGTH]));
 });
 
 /**

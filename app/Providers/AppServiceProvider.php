@@ -11,6 +11,11 @@ use Illuminate\Validation\Rules\Password;
 class AppServiceProvider extends ServiceProvider
 {
     /**
+     * Minimum password length, shown as a hint on the forms that set one.
+     */
+    public const int PASSWORD_MIN_LENGTH = 8;
+
+    /**
      * Register any application services.
      */
     public function register(): void
@@ -43,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
         // passwords people lose. It passes when the API cannot be reached, so
         // an offline instance is not locked out.
         Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(8)->uncompromised()
+            ? Password::min(self::PASSWORD_MIN_LENGTH)->uncompromised()
             : null,
         );
     }
